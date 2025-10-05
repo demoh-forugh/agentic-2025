@@ -156,6 +156,24 @@ nvidia-smi
 - Check if virtualization is enabled in BIOS
 - Restart Docker Desktop service
 
+### Docker shows "500 Internal Server Error"
+This error typically means Docker Desktop is installed but not fully running or not logged in:
+
+1. **Open Docker Desktop** from the Windows Start Menu
+2. **Log in or skip login** when prompted (Docker Desktop requires this step)
+3. **Wait for initialization** (30-60 seconds)
+4. **Verify status**: Look for the Docker whale icon in system tray showing "Engine running"
+5. **Run the setup script again** after Docker Desktop is fully started
+
+### First-time setup appears to stall during "Pulling"
+This is **normal behavior**! Docker performs two phases:
+
+1. **Download phase**: Downloads ~4-5 GB of Docker images (5-15 minutes)
+2. **Verification/Extraction phase**: After download completes, Docker verifies and extracts images (1-3 minutes)
+   - Status will still show "Pulling" during verification
+   - Progress bars may appear complete but verification continues
+   - **Be patient** - this is a necessary security step
+
 ### Containers won't start
 ```powershell
 # Check logs

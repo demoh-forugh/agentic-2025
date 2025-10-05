@@ -179,10 +179,21 @@ else
   # Start containers
   info "Starting services with Docker Compose"
   echo ""
+  echo "⚠️  IMPORTANT: First-time setup will download Docker images"
+  echo "   - Total download size: ~4-5 GB (ollama, n8n, open-webui, postgres)"
+  echo "   - Download time: 5-15 minutes depending on your internet speed"
+  echo "   - After download completes, Docker will VERIFY/EXTRACT the images"
+  echo "   - Verification may take 1-3 minutes and will show 'Pulling' status"
+  echo "   - This is normal - please be patient while images are verified!"
+  echo ""
 
   if [[ "${USE_HOST_OLLAMA:-0}" == "1" ]] && have ollama; then
-    if "${COMPOSE[@]}" "${compose_args[@]}" up -d open-webui n8n postgres; then
+    # Suppress container logs, only show creation status
+    if "${COMPOSE[@]}" "${compose_args[@]}" up --detach --quiet-pull open-webui n8n postgres 2>&1 | grep -E '^\[|^✔|Container|Network|Volume' || true; then
+      echo ""
       ok "Containers started successfully"
+      echo "   Containers are running in the background"
+      echo "   To view logs: docker-compose logs -f"
     else
       err "Failed to start containers"
       echo ""
@@ -196,8 +207,12 @@ else
       exit 1
     fi
   else
-    if "${COMPOSE[@]}" "${compose_args[@]}" up -d; then
+    # Suppress container logs, only show creation status
+    if "${COMPOSE[@]}" "${compose_args[@]}" up --detach --quiet-pull 2>&1 | grep -E '^\[|^✔|Container|Network|Volume' || true; then
+      echo ""
       ok "Containers started successfully"
+      echo "   Containers are running in the background"
+      echo "   To view logs: docker-compose logs -f"
     else
       err "Failed to start containers"
       echo ""

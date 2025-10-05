@@ -148,6 +148,12 @@ if (Test-CommandExists docker) {
     Write-Host "     2. Install and restart your computer" -ForegroundColor White
     Write-Host "     3. Ensure WSL2 is enabled:" -ForegroundColor White
     Write-Host "        wsl --install" -ForegroundColor Cyan
+    Write-Host "     4. IMPORTANT: After installation, you MUST:" -ForegroundColor Yellow
+    Write-Host "        - Open Docker Desktop from the Start Menu" -ForegroundColor White
+    Write-Host "        - Log in to Docker Desktop (or skip login if prompted)" -ForegroundColor White
+    Write-Host "        - Wait for Docker Desktop to fully start (icon in system tray)" -ForegroundColor White
+    Write-Host "        - Ensure Docker Desktop shows 'Engine running' status" -ForegroundColor White
+    Write-Host "     5. Run this script again after Docker Desktop is fully running" -ForegroundColor White
     Write-Host ""
     exit 1
 }
@@ -160,12 +166,21 @@ try {
     Write-Status "Docker daemon is not running!" "ERROR"
     Write-Host ""
     Write-Host "  >> Troubleshooting Steps:" -ForegroundColor Yellow
-    Write-Host "     1. Start Docker Desktop from Windows Start Menu" -ForegroundColor White
-    Write-Host "     2. Wait 30-60 seconds for Docker to initialize" -ForegroundColor White
-    Write-Host "     3. Look for Docker icon in system tray (should not have errors)" -ForegroundColor White
+    Write-Host "     1. Open Docker Desktop from Windows Start Menu" -ForegroundColor White
+    Write-Host "     2. IMPORTANT: Log in to Docker Desktop (or skip login if prompted)" -ForegroundColor Yellow
+    Write-Host "        - Docker Desktop requires you to be logged in or skip the login prompt" -ForegroundColor White
+    Write-Host "        - Wait for Docker Desktop to fully initialize (30-60 seconds)" -ForegroundColor White
+    Write-Host "     3. Verify Docker Desktop status:" -ForegroundColor White
+    Write-Host "        - Look for Docker icon in system tray (whale icon)" -ForegroundColor White
+    Write-Host "        - Icon should show 'Engine running' when you hover over it" -ForegroundColor White
+    Write-Host "        - Open Docker Desktop and ensure no error messages appear" -ForegroundColor White
     Write-Host "     4. If WSL2 errors appear, run:" -ForegroundColor White
     Write-Host "        wsl --update" -ForegroundColor Cyan
-    Write-Host "     5. Retry this script once Docker is running" -ForegroundColor White
+    Write-Host "     5. Run this script again after Docker Desktop is fully running" -ForegroundColor White
+    Write-Host ""
+    Write-Host "  >> Common Error: '500 Internal Server Error for API route'" -ForegroundColor Red
+    Write-Host "     This usually means Docker Desktop is installed but not logged in or not fully started." -ForegroundColor White
+    Write-Host "     Solution: Open Docker Desktop, complete login/skip, and wait for it to fully start." -ForegroundColor Yellow
     Write-Host ""
     exit 1
 }
@@ -292,7 +307,7 @@ if ($existingContainers.Count -gt 0) {
     if ($restart -eq "y" -or $restart -eq "Y") {
         Write-Status "Restarting containers..." "INFO"
         try {
-            Invoke-Compose @composeArgs restart
+            Invoke-Compose @composeArgs restart 2>&1 | Out-Null
             Write-Status "Containers restarted successfully!" "SUCCESS"
         } catch {
             Write-Status "Failed to restart containers." "ERROR"
@@ -313,13 +328,45 @@ if ($existingContainers.Count -gt 0) {
     # Start containers
     Write-Status "Starting Docker containers..." "INFO"
     Write-Host ""
+    Write-Host "  >> IMPORTANT: First-time setup will download Docker images" -ForegroundColor Yellow
+    Write-Host "     - Total download size: ~4-5 GB (ollama, n8n, open-webui, postgres)" -ForegroundColor White
+    Write-Host "     - Download time: 5-15 minutes depending on your internet speed" -ForegroundColor White
+    Write-Host "     - After download completes, Docker will VERIFY/EXTRACT the images" -ForegroundColor Cyan
+    Write-Host "     - Verification may take 1-3 minutes and will show 'Pulling' status" -ForegroundColor Cyan
+    Write-Host "     - This is normal - please be patient while images are verified!" -ForegroundColor Yellow
+    Write-Host ""
 
     try {
-        Invoke-Compose @composeArgs up -d
+        # Start containers in detached mode (suppress container logs, only show creation status)
+        Write-Host "  Creating and starting containers..." -ForegroundColor Cyan
+        $startTime = Get-Date
+        
+        # Use --detach explicitly and redirect to capture only status messages
+        # The --quiet-pull flag suppresses pull output after first time
+        $ErrorActionPreference = 'Continue'
+        $output = Invoke-Compose @composeArgs up --detach --quiet-pull 2>&1 | Out-String
+        $ErrorActionPreference = 'Stop'
+        
         if ($LASTEXITCODE -ne 0) {
+            Write-Host $output
             throw "docker-compose up failed with exit code $LASTEXITCODE"
         }
-        Write-Status "Containers started successfully!" "SUCCESS"
+        
+        # Show only the summary lines (Running X/Y, Container created/started)
+        # Filter out "Attaching to" and container log lines
+        $output -split "`n" | Where-Object { 
+            $_ -notmatch '^(Attaching to|.*\s+\|)' -and 
+            $_ -match '^\[.*\]|^✔|^\s*✔|Container.*|Network.*|Volume.*' -and
+            $_.Trim() -ne ''
+        } | ForEach-Object { 
+            Write-Host "  $_" -ForegroundColor Gray
+        }
+        
+        $elapsed = ((Get-Date) - $startTime).TotalSeconds
+        Write-Host ""
+        Write-Status "Containers started successfully in $([math]::Round($elapsed, 1))s" "SUCCESS"
+        Write-Host "  >> Containers are running in the background" -ForegroundColor Cyan
+        Write-Host "     To view logs: docker-compose logs -f" -ForegroundColor DarkGray
     } catch {
         Write-Status "Failed to start containers." "ERROR"
         Write-Host ""
