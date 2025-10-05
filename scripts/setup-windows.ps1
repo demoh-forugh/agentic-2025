@@ -577,7 +577,7 @@ Write-Host ""
 # Summary of what was accomplished
 Write-Host "  [COMPLETED]" -ForegroundColor Green
 Write-Host "     * Docker verified and running" -ForegroundColor White
-Write-Host "     * Configuration files prepared (`.env, docker-compose.yml)" -ForegroundColor White
+Write-Host "     * Configuration files prepared (.env and docker-compose.yml)" -ForegroundColor White
 Write-Host "     * Containers started: ollama, n8n, open-webui, postgres" -ForegroundColor White
 
 $modelCount = 0
@@ -604,7 +604,7 @@ Write-Host "  [NEXT STEPS]" -ForegroundColor Yellow
 Write-Host "     1. Verify installation: .\scripts\verify-windows.ps1" -ForegroundColor White
 Write-Host "     2. Open OpenWebUI (http://localhost:3000) and create an account" -ForegroundColor White
 Write-Host "     3. Open n8n (http://localhost:5678) and set up credentials" -ForegroundColor White
-Write-Host "     4. Import sample workflows from .\workflows\" -ForegroundColor White
+Write-Host "     4. Import sample workflows from .\workflows" -ForegroundColor White
 Write-Host ""
 Write-Host "  [DOCUMENTATION]" -ForegroundColor Cyan
 Write-Host "     * Quick Start:     docs\QUICK_START.md" -ForegroundColor White

@@ -438,7 +438,7 @@ echo ""
 # Summary of what was accomplished
 echo "✅ Completed:"
 echo "   • Docker verified and running"
-echo "   • Configuration files prepared (.env, docker-compose.yml)"
+echo "   • Configuration files prepared (.env and docker-compose.yml)"
 
 if [[ "${USE_HOST_OLLAMA:-0}" == "1" ]]; then
   echo "   • Containers started: n8n, open-webui, postgres (using host Ollama)"
