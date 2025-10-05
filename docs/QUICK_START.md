@@ -205,7 +205,7 @@ docker exec -it ollama ollama list
 
 **Try the Hello World workflow to test Ollama integration using n8n's built-in import:**
 
-1. In n8n, create a new workflow and name it "Hello World"
+1. In n8n, create a new workflow. The workflow will be named during import.
 2. Click the **"..."** menu button (top right corner) → **"Import from File"**
 3. In the file browser, navigate to where you cloned this repository
 4. Browse to the **`workflows/`** folder inside your repository
@@ -216,25 +216,23 @@ docker exec -it ollama ollama list
    - Click the node, then click **"Credential to connect with"** dropdown
    - Select **"Create New Credential"**
    - Change **Base URL** from `http://localhost:11434` to **`http://ollama:11434`**
-   - Click **"Save"** (n8n will test the connection and the indicator should turn green)
-8. Click **"Execute Workflow"** button in the top toolbar
-9. View the output in the **"Format Response"** node - see your LLM respond! 🎉
+   - Click **"Save"**. n8n will test the connection and the indicator should turn green. Once successful, close the credential and then the   node.
+8. Save the workflow.
+9. Click **"Open Chat"** button in the bottom of the dit window.
+10. Type a test message, like "Hello!"
+11. See your LLM respond! 🎉
+  _note:_ *depending on your system requirements, this could take seconds to minutes for first response. Additonal responses should be faster.*_
 
 **Why `http://ollama:11434`?**
 All containers communicate using service names on the shared Docker network (`ai-network`). Using the container name `ollama` ensures n8n reaches the Ollama service running in Docker.
 
 **Keep credentials handy:** You only need to create each credential type once. After that, all workflows automatically see and use the same credentials.
 
-**Example paths to find your workflows:**
-- **Windows**: `C:\Users\YourName\Documents\demos\workflows\01-hello-world.json`
-- **macOS**: `/Users/YourName/Documents/demos/workflows/01-hello-world.json`
-- **Linux**: `/home/username/demos/workflows/01-hello-world.json`
-
 **Success!** Your local AI agent stack is working. ✅
 
 ### 4. Import More Workflows (Optional)
 
-We've included **6 production-ready workflows** for common business use cases:
+We've included **6 example workflows** for common use cases:
 
 | Workflow | Use Case | Setup Needed |
 |----------|----------|--------------|
