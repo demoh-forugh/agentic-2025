@@ -6,7 +6,7 @@ Common issues and solutions for the workshop stack.
 
 ## 🐳 Docker Issues
 
-### Docker Desktop won't start
+### Docker Desktop won't start (Windows)
 
 **Symptoms**: Docker Desktop shows "Starting..." indefinitely or fails to start
 
@@ -42,6 +42,84 @@ Start-Service docker
 5. **Reset Docker Desktop**:
 - Open Docker Desktop
 - Settings → Trouble → Reset to factory defaults
+
+---
+
+### Docker Desktop won't start (macOS)
+
+**Symptoms**: Docker Desktop shows "Starting..." indefinitely, or displays errors on startup
+
+**Solutions**:
+
+1. **Check system permissions**:
+   - Open **System Settings** → **Privacy & Security**
+   - Look for Docker in the list and ensure it has necessary permissions
+   - You may need to click "Allow" for Docker
+
+2. **Verify sufficient resources**:
+   - Open Docker Desktop
+   - Go to Settings → Resources
+   - Ensure:
+     - **Memory**: At least 4GB (8GB+ recommended)
+     - **Disk space**: At least 20GB available
+     - **CPUs**: At least 2 cores (4+ recommended)
+
+3. **Quit and restart Docker Desktop**:
+   ```bash
+   # Quit Docker completely
+   osascript -e 'quit app "Docker"'
+
+   # Wait 5 seconds
+   sleep 5
+
+   # Restart Docker
+   open -a Docker
+   ```
+
+4. **Check for updates**:
+   - Click the Docker icon in menu bar
+   - Check for updates and install if available
+   - Restart after updating
+
+5. **Reset Docker Desktop**:
+   - Open Docker Desktop
+   - Settings → Troubleshoot → Reset to factory defaults
+   - **Warning**: This will delete all containers, images, and volumes
+
+6. **For Apple Silicon (M1/M2/M3) Macs**:
+   - Make sure you downloaded the **Apple Silicon version** of Docker Desktop
+   - Check if Rosetta 2 is installed:
+     ```bash
+     /usr/sbin/softwareupdate --install-rosetta
+     ```
+   - Enable "Use Rosetta for x86/amd64 emulation" in Docker Settings → General
+
+7. **Reinstall Docker Desktop**:
+   - Completely uninstall Docker Desktop (move to Trash and empty Trash)
+   - Download latest version from https://www.docker.com/products/docker-desktop/
+   - Install and restart Mac
+
+---
+
+### Script Permission Denied (macOS/Linux)
+
+**Symptoms**: When running `./scripts/setup-mac.sh`, you get "Permission denied" error
+
+**Solution**:
+```bash
+# Make scripts executable
+chmod +x ./scripts/setup-mac.sh
+chmod +x ./scripts/verify-mac.sh
+chmod +x ./scripts/measure-cold-warm-mac.sh
+
+# Or all at once:
+chmod +x ./scripts/*.sh
+
+# Now run the script
+./scripts/setup-mac.sh
+```
+
+**Why this happens**: Downloaded files from GitHub/web don't have execute permissions by default on Unix-like systems.
 
 ---
 

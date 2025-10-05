@@ -196,37 +196,81 @@ This section covers installing and running the workshop stack on macOS using Doc
 ### Prerequisites (macOS)
 
 - **OS**: macOS 12+ (Monterey) recommended
-- **Docker**: Docker Desktop for Mac installed and running
-- **Command line tools**: `bash`, `curl`
+- **RAM**: 16GB+ (8GB minimum)
+- **Storage**: 20GB free disk space
+- **Docker**: Docker Desktop for Mac (see installation below)
+- **Command line tools**: `bash`, `curl` (pre-installed on macOS)
 - **Optional**: `jq` for JSON parsing (install via Homebrew: `brew install jq`)
 
-### Quick Start (Scripts)
+### Step 1: Install Docker Desktop for Mac
+
+1. Visit [Docker Desktop for Mac](https://www.docker.com/products/docker-desktop/)
+2. Click **"Download for Mac"**
+   - **For Apple Silicon (M1/M2/M3)**: Download the Apple Silicon version
+   - **For Intel Macs**: Download the Intel version
+3. Open the downloaded `.dmg` file
+4. Drag the Docker icon to your Applications folder
+5. Open Docker from Applications (or Spotlight: `Cmd + Space`, type "Docker")
+6. **First-time setup**:
+   - Docker may ask for system permissions - click "OK"
+   - Accept the Docker Desktop Service Agreement
+   - You may skip the optional Docker account sign-in (click "Continue without signing in")
+7. **Wait for initialization**: Look for the Docker icon in your menu bar (top right)
+   - When Docker is ready, the icon will be solid (not animated)
+   - You'll see "Docker Desktop is running" when you click the icon
+8. **Verify Docker is working**:
+   ```bash
+   # Open Terminal (Cmd + Space, type "Terminal")
+   docker --version
+   docker ps
+   ```
+   If both commands work, Docker is ready! ✅
+
+**Tip for Apple Silicon Macs**: Docker Desktop automatically enables Rosetta emulation for x86 containers. This is normal and required for some Docker images.
+
+### Step 2: Run Automated Setup
+
+Open Terminal and navigate to where you cloned/downloaded this repository:
 
 ```bash
-# From the repository root
+# Navigate to the repository
+cd ~/Downloads/demos  # Adjust path to where you downloaded the workshop files
 
-# 1) Make scripts executable (first time only)
-chmod +x ./scripts/setup-mac.sh \
-         ./scripts/verify-mac.sh \
-         ./scripts/measure-cold-warm-mac.sh
+# FIRST TIME ONLY: Make scripts executable
+chmod +x ./scripts/setup-mac.sh ./scripts/verify-mac.sh
 
-# 2) Setup: start Docker services and prepare environment
-#    The script will:
-#    - Detect your system specs (RAM, CPU, GPU)
-#    - Recommend the optimal model for your hardware
-#    - Start all containers with health checks
-#    - Optionally download a model
+# Run the automated setup script
 ./scripts/setup-mac.sh
+```
 
-# 3) Verify: check services are reachable
+**What the setup script does:**
+- ✓ Detects your system specs (RAM, CPU, GPU)
+- ✓ Recommends the optimal model for your hardware
+- ✓ Checks if Docker is running
+- ✓ Starts all containers (ollama, n8n, open-webui, postgres) with health checks
+- ✓ Optionally downloads an LLM model
+- ✓ Provides troubleshooting if anything fails
+
+**Optional: Enable detailed logging**
+```bash
+ENABLE_LOGGING=1 ./scripts/setup-mac.sh
+```
+
+### Step 3: Verify Installation
+
+```bash
 ./scripts/verify-mac.sh
+```
 
-# 4) Measure: collect cold vs warm performance
-#    JSON will be saved under artifacts/performance/
+This checks that all services are running and accessible.
+
+**Optional: Measure Performance**
+```bash
+# Measure cold start vs warm performance
 ./scripts/measure-cold-warm-mac.sh
 
-# Optional environment overrides:
-MODEL="llama3.2:3b" WARM_RUNS=5 ./scripts/measure-cold-warm-mac.sh
+# Custom model and runs:
+MODEL="llama3.2:1b" WARM_RUNS=5 ./scripts/measure-cold-warm-mac.sh
 ```
 
 ### Manual Setup (Alternative on macOS)

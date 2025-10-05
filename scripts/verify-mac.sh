@@ -79,6 +79,8 @@ fi
 echo ""
 info "Checking containers..."
 
+REQUIRED_CONTAINERS=("ollama" "open-webui" "n8n" "postgres")
+
 running_containers=()
 stopped_containers=()
 missing_containers=()
@@ -108,7 +110,6 @@ for container_name in "${REQUIRED_CONTAINERS[@]}"; do
   fi
 done
 
-{{ ... }}
 # 3. Check ports and verify they're mapped to correct containers
 echo ""
 info "Checking ports..."

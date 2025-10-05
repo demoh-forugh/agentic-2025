@@ -45,11 +45,20 @@ $env:ENABLE_LOGGING="1"
 ```
 
 #### macOS
-```bash
-# First run only: ensure scripts are executable
-chmod +x ./scripts/setup-mac.sh ./scripts/verify-mac.sh
 
-# Confirm Docker Desktop for Mac is open and showing "Engine running"
+**Prerequisites:**
+1. Open Docker Desktop from Applications (or Spotlight: `Cmd + Space`, type "Docker")
+2. Wait for Docker icon in menu bar (top right) to show "Docker Desktop is running"
+3. Open Terminal (Spotlight: `Cmd + Space`, type "Terminal")
+4. Navigate to where you downloaded the workshop files:
+   ```bash
+   cd ~/Downloads/demos  # Adjust to your actual path
+   ```
+
+**Run Setup:**
+```bash
+# FIRST TIME ONLY: Make scripts executable
+chmod +x ./scripts/setup-mac.sh ./scripts/verify-mac.sh
 
 # Run automated setup
 ./scripts/setup-mac.sh
@@ -57,6 +66,8 @@ chmod +x ./scripts/setup-mac.sh ./scripts/verify-mac.sh
 # Optional: Enable detailed logging
 ENABLE_LOGGING=1 ./scripts/setup-mac.sh
 ```
+
+**Don't have Docker Desktop?** See [Installation Guide - macOS](./INSTALLATION.md#-macos-installation) for complete Docker setup instructions.
 
 **What the setup script does:**
 - ✓ Check prerequisites (Docker, disk space, network)
