@@ -38,10 +38,19 @@ if ($env:ENABLE_LOGGING -eq "1") {
     Write-Host ""
 }
 
-Write-Host "═══════════════════════════════════════════════════════" -ForegroundColor Cyan
-Write-Host "   N8N Workshop - Automated Setup Script v1.1.0" -ForegroundColor Cyan
-Write-Host "   Go to Agentic Conference 2025" -ForegroundColor Cyan
-Write-Host "═══════════════════════════════════════════════════════" -ForegroundColor Cyan
+Write-Host "`n" -NoNewline
+Write-Host "╔" -ForegroundColor Cyan -NoNewline
+Write-Host ("═" * 55) -ForegroundColor Cyan -NoNewline
+Write-Host "╗" -ForegroundColor Cyan
+Write-Host "║" -ForegroundColor Cyan -NoNewline
+Write-Host "   N8N Workshop - Automated Setup Script v1.1.1      " -ForegroundColor White -NoNewline
+Write-Host "║" -ForegroundColor Cyan
+Write-Host "║" -ForegroundColor Cyan -NoNewline
+Write-Host "   Go to Agentic Conference 2025                     " -ForegroundColor Yellow -NoNewline
+Write-Host "║" -ForegroundColor Cyan
+Write-Host "╚" -ForegroundColor Cyan -NoNewline
+Write-Host ("═" * 55) -ForegroundColor Cyan -NoNewline
+Write-Host "╝" -ForegroundColor Cyan
 Write-Host ""
 
 # Function to check if a command exists
@@ -62,17 +71,18 @@ function Write-Status {
         "SUCCESS" { "Green" }
         "ERROR"   { "Red" }
         "WARNING" { "Yellow" }
-        default   { "White" }
+        default   { "Cyan" }
     }
 
     $symbol = switch ($Status) {
-        "SUCCESS" { "[OK]" }
-        "ERROR"   { "[X]" }
-        "WARNING" { "[!]" }
-        default   { "[i]" }
+        "SUCCESS" { "✓" }
+        "ERROR"   { "✗" }
+        "WARNING" { "⚠" }
+        default   { "ℹ" }
     }
 
-    Write-Host "$symbol $Message" -ForegroundColor $color
+    Write-Host "  $symbol " -ForegroundColor $color -NoNewline
+    Write-Host $Message -ForegroundColor White
 }
 
 # Helper to run Docker Compose (supports v1 'docker-compose' and v2 'docker compose')
@@ -127,7 +137,9 @@ function Wait-ContainerHealth {
 }
 
 # Check prerequisites
-Write-Host "Checking prerequisites..." -ForegroundColor Yellow
+Write-Host "`n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor DarkGray
+Write-Host "  CHECKING PREREQUISITES" -ForegroundColor Cyan
+Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor DarkGray
 Write-Host ""
 
 # Check Docker
@@ -137,10 +149,12 @@ if (Test-CommandExists docker) {
 } else {
     Write-Status "Docker is not installed!" "ERROR"
     Write-Host ""
-    Write-Host "Installation instructions:" -ForegroundColor Yellow
-    Write-Host "  1. Download Docker Desktop: https://www.docker.com/products/docker-desktop/" -ForegroundColor White
-    Write-Host "  2. Install and restart your computer" -ForegroundColor White
-    Write-Host "  3. Ensure WSL2 is enabled: wsl --install" -ForegroundColor White
+    Write-Host "  📦 Installation Instructions:" -ForegroundColor Yellow
+    Write-Host "     1. Download Docker Desktop:" -ForegroundColor White
+    Write-Host "        https://www.docker.com/products/docker-desktop/" -ForegroundColor Cyan
+    Write-Host "     2. Install and restart your computer" -ForegroundColor White
+    Write-Host "     3. Ensure WSL2 is enabled:" -ForegroundColor White
+    Write-Host "        wsl --install" -ForegroundColor Cyan
     Write-Host ""
     exit 1
 }
@@ -152,12 +166,13 @@ try {
 } catch {
     Write-Status "Docker daemon is not running!" "ERROR"
     Write-Host ""
-    Write-Host "Troubleshooting steps:" -ForegroundColor Yellow
-    Write-Host "  1. Start Docker Desktop from Windows Start Menu" -ForegroundColor White
-    Write-Host "  2. Wait 30-60 seconds for Docker to initialize" -ForegroundColor White
-    Write-Host "  3. Look for Docker icon in system tray (should not have errors)" -ForegroundColor White
-    Write-Host "  4. If WSL2 errors appear, run: wsl --update" -ForegroundColor White
-    Write-Host "  5. Retry this script once Docker is running" -ForegroundColor White
+    Write-Host "  🔧 Troubleshooting Steps:" -ForegroundColor Yellow
+    Write-Host "     1. Start Docker Desktop from Windows Start Menu" -ForegroundColor White
+    Write-Host "     2. Wait 30-60 seconds for Docker to initialize" -ForegroundColor White
+    Write-Host "     3. Look for Docker icon in system tray (should not have errors)" -ForegroundColor White
+    Write-Host "     4. If WSL2 errors appear, run:" -ForegroundColor White
+    Write-Host "        wsl --update" -ForegroundColor Cyan
+    Write-Host "     5. Retry this script once Docker is running" -ForegroundColor White
     Write-Host ""
     exit 1
 }
@@ -191,8 +206,8 @@ if (Test-CommandExists docker-compose) {
     } catch {
         Write-Status "Docker Compose (v1 or v2) is not available!" "ERROR"
         Write-Host ""
-        Write-Host "Docker Compose should be included with Docker Desktop." -ForegroundColor Yellow
-        Write-Host "Try reinstalling Docker Desktop." -ForegroundColor Yellow
+        Write-Host "  💡 Docker Compose should be included with Docker Desktop." -ForegroundColor Yellow
+        Write-Host "     Try reinstalling Docker Desktop." -ForegroundColor White
         Write-Host ""
         exit 1
     }
@@ -202,7 +217,7 @@ if (Test-CommandExists docker-compose) {
 }
 
 Write-Host ""
-Write-Host "═══════════════════════════════════════════════════════" -ForegroundColor Cyan
+Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor DarkGray
 Write-Host ""
 
 # Check if .env exists, if not create from example
@@ -227,8 +242,8 @@ if (-Not (Test-Path "docker-compose.yml")) {
     } else {
         Write-Status "docker-compose.yml not found in configs!" "ERROR"
         Write-Host ""
-        Write-Host "Are you running this script from the repository root?" -ForegroundColor Yellow
-        Write-Host "Current directory: $(Get-Location)" -ForegroundColor Yellow
+        Write-Host "  ⚠ Are you running this script from the repository root?" -ForegroundColor Yellow
+        Write-Host "    Current directory: $(Get-Location)" -ForegroundColor White
         Write-Host ""
         exit 1
     }
@@ -274,9 +289,9 @@ foreach ($containerName in $requiredContainers) {
 if ($existingContainers.Count -gt 0) {
     Write-Status "Found running containers: $($existingContainers -join ', ')" "SUCCESS"
     Write-Host ""
-    Write-Host "Containers are already running. Options:" -ForegroundColor Yellow
-    Write-Host "  • Continue to use existing containers (recommended)" -ForegroundColor White
-    Write-Host "  • Restart containers to apply configuration changes" -ForegroundColor White
+    Write-Host "  🔄 Containers are already running. Options:" -ForegroundColor Yellow
+    Write-Host "     • Continue to use existing containers (recommended)" -ForegroundColor White
+    Write-Host "     • Restart containers to apply configuration changes" -ForegroundColor White
     Write-Host ""
 
     $restart = Read-Host "Restart containers? (y/N)"
@@ -289,11 +304,12 @@ if ($existingContainers.Count -gt 0) {
         } catch {
             Write-Status "Failed to restart containers." "ERROR"
             Write-Host ""
-            Write-Host "Troubleshooting steps:" -ForegroundColor Yellow
-            Write-Host "  1. Check logs: docker-compose logs -f" -ForegroundColor White
-            Write-Host "  2. Stop and start manually:" -ForegroundColor White
-            Write-Host "     docker-compose down" -ForegroundColor Gray
-            Write-Host "     docker-compose up -d" -ForegroundColor Gray
+            Write-Host "  🔧 Troubleshooting Steps:" -ForegroundColor Yellow
+            Write-Host "     1. Check logs:" -ForegroundColor White
+            Write-Host "        docker-compose logs -f" -ForegroundColor Cyan
+            Write-Host "     2. Stop and start manually:" -ForegroundColor White
+            Write-Host "        docker-compose down" -ForegroundColor Cyan
+            Write-Host "        docker-compose up -d" -ForegroundColor Cyan
             Write-Host ""
             exit 1
         }
@@ -314,16 +330,19 @@ if ($existingContainers.Count -gt 0) {
     } catch {
         Write-Status "Failed to start containers." "ERROR"
         Write-Host ""
-        Write-Host "Troubleshooting steps:" -ForegroundColor Yellow
-        Write-Host "  1. Check logs: docker-compose logs -f" -ForegroundColor White
-        Write-Host "  2. Check for port conflicts:" -ForegroundColor White
-        Write-Host "     netstat -ano | findstr `":5678 :3000 :11434 :5432`"" -ForegroundColor Gray
-        Write-Host "  3. Verify WSL2 is running: wsl --status" -ForegroundColor White
-        Write-Host "  4. Restart Docker Desktop and retry this script" -ForegroundColor White
-        Write-Host "  5. Check disk space: docker system df" -ForegroundColor White
+        Write-Host "  🔧 Troubleshooting Steps:" -ForegroundColor Yellow
+        Write-Host "     1. Check logs:" -ForegroundColor White
+        Write-Host "        docker-compose logs -f" -ForegroundColor Cyan
+        Write-Host "     2. Check for port conflicts:" -ForegroundColor White
+        Write-Host "        netstat -ano | findstr `":5678 :3000 :11434 :5432`"" -ForegroundColor Cyan
+        Write-Host "     3. Verify WSL2 is running:" -ForegroundColor White
+        Write-Host "        wsl --status" -ForegroundColor Cyan
+        Write-Host "     4. Restart Docker Desktop and retry this script" -ForegroundColor White
+        Write-Host "     5. Check disk space:" -ForegroundColor White
+        Write-Host "        docker system df" -ForegroundColor Cyan
         Write-Host ""
-        Write-Host "Full error message:" -ForegroundColor Red
-        Write-Host $_.Exception.Message -ForegroundColor Red
+        Write-Host "  ❌ Full error message:" -ForegroundColor Red
+        Write-Host "     $($_.Exception.Message)" -ForegroundColor Red
         Write-Host ""
         exit 1
     }
@@ -346,22 +365,26 @@ if ($existingContainers.Count -gt 0) {
     if ($unhealthyContainers.Count -gt 0) {
         Write-Host ""
         Write-Status "Some containers did not become healthy: $($unhealthyContainers -join ', ')" "WARNING"
-        Write-Host "They may still be initializing. Check with: docker-compose ps" -ForegroundColor Yellow
+        Write-Host "  💡 They may still be initializing. Check with:" -ForegroundColor Yellow
+        Write-Host "     docker-compose ps" -ForegroundColor Cyan
         Write-Host ""
     }
 }
 
 # Check container status
 Write-Host ""
-Write-Host "Container Status:" -ForegroundColor Yellow
+Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor DarkGray
+Write-Host "  CONTAINER STATUS" -ForegroundColor Cyan
+Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor DarkGray
+Write-Host ""
 Invoke-Compose ps
 
 Write-Host ""
-Write-Host "═══════════════════════════════════════════════════════" -ForegroundColor Cyan
+Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor DarkGray
 Write-Host ""
 
 # Download Ollama model (with idempotency check)
-Write-Host "Would you like to download an Ollama model? (Y/N)" -ForegroundColor Yellow
+Write-Host "  🤖 Would you like to download an Ollama model? (Y/N)" -ForegroundColor Yellow
 $downloadModel = Read-Host
 
 if ($downloadModel -eq "Y" -or $downloadModel -eq "y") {
@@ -381,11 +404,11 @@ if ($downloadModel -eq "Y" -or $downloadModel -eq "y") {
         Write-Status "Could not check existing models (Ollama may still be starting)" "WARNING"
     }
 
-    Write-Host "Select a model to download:" -ForegroundColor Yellow
-    Write-Host "1. llama3.2:1b  (1GB)  - Fast, recommended for testing" -ForegroundColor White
-    Write-Host "2. llama3.2     (4GB)  - Balanced, recommended for workshop" -ForegroundColor White
-    Write-Host "3. mistral      (4GB)  - Good for coding tasks" -ForegroundColor White
-    Write-Host "4. Skip for now" -ForegroundColor Gray
+    Write-Host "  📦 Select a model to download:" -ForegroundColor Yellow
+    Write-Host "     1. llama3.2:1b  (1GB)  - Fast, recommended for testing" -ForegroundColor White
+    Write-Host "     2. llama3.2     (4GB)  - Balanced, recommended for workshop" -ForegroundColor White
+    Write-Host "     3. mistral      (4GB)  - Good for coding tasks" -ForegroundColor White
+    Write-Host "     4. Skip for now" -ForegroundColor DarkGray
     Write-Host ""
 
     $modelChoice = Read-Host "Enter choice (1-4)"
@@ -414,7 +437,7 @@ if ($downloadModel -eq "Y" -or $downloadModel -eq "y") {
         } else {
             Write-Host ""
             Write-Status "Downloading '$model'... This may take 2-10 minutes depending on your connection." "INFO"
-            Write-Host "  Model size and download time varies. Please be patient..." -ForegroundColor Yellow
+            Write-Host "  ⏳ Model size and download time varies. Please be patient..." -ForegroundColor Yellow
             Write-Host ""
 
             try {
@@ -426,36 +449,47 @@ if ($downloadModel -eq "Y" -or $downloadModel -eq "y") {
                     Write-Host ""
                     Write-Status "Model download may have failed (exit code: $LASTEXITCODE)" "WARNING"
                     Write-Host ""
-                    Write-Host "Verify download with: docker exec -it ollama ollama list" -ForegroundColor Yellow
-                    Write-Host "Retry download with: docker exec -it ollama ollama pull $model" -ForegroundColor Yellow
+                    Write-Host "  💡 Verify download with:" -ForegroundColor Yellow
+                    Write-Host "     docker exec -it ollama ollama list" -ForegroundColor Cyan
+                    Write-Host "  💡 Retry download with:" -ForegroundColor Yellow
+                    Write-Host "     docker exec -it ollama ollama pull $model" -ForegroundColor Cyan
                 }
             } catch {
                 Write-Host ""
                 Write-Status "Failed to download model." "ERROR"
                 Write-Host ""
-                Write-Host "Troubleshooting:" -ForegroundColor Yellow
-                Write-Host "  • Check internet connection" -ForegroundColor White
-                Write-Host "  • Verify Ollama container is running: docker ps | findstr ollama" -ForegroundColor White
-                Write-Host "  • Check Ollama logs: docker logs ollama" -ForegroundColor White
-                Write-Host "  • Retry manually: docker exec -it ollama ollama pull $model" -ForegroundColor White
+                Write-Host "  🔧 Troubleshooting:" -ForegroundColor Yellow
+                Write-Host "     • Check internet connection" -ForegroundColor White
+                Write-Host "     • Verify Ollama container is running:" -ForegroundColor White
+                Write-Host "       docker ps | findstr ollama" -ForegroundColor Cyan
+                Write-Host "     • Check Ollama logs:" -ForegroundColor White
+                Write-Host "       docker logs ollama" -ForegroundColor Cyan
+                Write-Host "     • Retry manually:" -ForegroundColor White
+                Write-Host "       docker exec -it ollama ollama pull $model" -ForegroundColor Cyan
                 Write-Host ""
-                Write-Host "You can continue and download models later." -ForegroundColor Cyan
+                Write-Host "  💡 You can continue and download models later." -ForegroundColor Cyan
             }
         }
     }
 }
 
 Write-Host ""
-Write-Host "═══════════════════════════════════════════════════════" -ForegroundColor Cyan
-Write-Host "   Setup Summary" -ForegroundColor Green
-Write-Host "═══════════════════════════════════════════════════════" -ForegroundColor Cyan
+Write-Host "╔" -ForegroundColor Green -NoNewline
+Write-Host ("═" * 55) -ForegroundColor Green -NoNewline
+Write-Host "╗" -ForegroundColor Green
+Write-Host "║" -ForegroundColor Green -NoNewline
+Write-Host "                    SETUP SUMMARY                      " -ForegroundColor White -NoNewline
+Write-Host "║" -ForegroundColor Green
+Write-Host "╚" -ForegroundColor Green -NoNewline
+Write-Host ("═" * 55) -ForegroundColor Green -NoNewline
+Write-Host "╝" -ForegroundColor Green
 Write-Host ""
 
 # Summary of what was accomplished
-Write-Host "✅ Completed:" -ForegroundColor Green
-Write-Host "   • Docker verified and running" -ForegroundColor White
-Write-Host "   • Configuration files prepared (.env, docker-compose.yml)" -ForegroundColor White
-Write-Host "   • Containers started: ollama, n8n, open-webui, postgres" -ForegroundColor White
+Write-Host "  ✅ COMPLETED:" -ForegroundColor Green
+Write-Host "     • Docker verified and running" -ForegroundColor White
+Write-Host "     • Configuration files prepared (.env, docker-compose.yml)" -ForegroundColor White
+Write-Host "     • Containers started: ollama, n8n, open-webui, postgres" -ForegroundColor White
 
 $modelCount = 0
 try {
@@ -466,30 +500,45 @@ try {
 } catch {}
 
 if ($modelCount -gt 0) {
-    Write-Host "   • Ollama models installed: $modelCount" -ForegroundColor White
+    Write-Host "     • Ollama models installed: $modelCount" -ForegroundColor White
 } else {
-    Write-Host "   • Ollama models: none (download later)" -ForegroundColor Yellow
+    Write-Host "     • Ollama models: none (download later)" -ForegroundColor Yellow
 }
 
 Write-Host ""
-Write-Host "🔗 Access Your Services:" -ForegroundColor Cyan
-Write-Host "   • OpenWebUI:  http://localhost:3000  (Chat with LLMs)" -ForegroundColor White
-Write-Host "   • N8N:        http://localhost:5678  (Build workflows)" -ForegroundColor White
-Write-Host "   • Ollama API: http://localhost:11434 (LLM API endpoint)" -ForegroundColor White
+Write-Host "  🔗 ACCESS YOUR SERVICES:" -ForegroundColor Cyan
+Write-Host "     • OpenWebUI:  " -NoNewline -ForegroundColor White
+Write-Host "http://localhost:3000" -ForegroundColor Cyan -NoNewline
+Write-Host "  (Chat with LLMs)" -ForegroundColor DarkGray
+Write-Host "     • N8N:        " -NoNewline -ForegroundColor White
+Write-Host "http://localhost:5678" -ForegroundColor Cyan -NoNewline
+Write-Host "  (Build workflows)" -ForegroundColor DarkGray
+Write-Host "     • Ollama API: " -NoNewline -ForegroundColor White
+Write-Host "http://localhost:11434" -ForegroundColor Cyan -NoNewline
+Write-Host " (LLM API endpoint)" -ForegroundColor DarkGray
 Write-Host ""
-Write-Host "📋 Next Steps:" -ForegroundColor Yellow
-Write-Host "   1. Verify installation: .\scripts\verify-windows.ps1" -ForegroundColor White
-Write-Host "   2. Open OpenWebUI (http://localhost:3000) and create an account" -ForegroundColor White
-Write-Host "   3. Open N8N (http://localhost:5678) and set up credentials" -ForegroundColor White
-Write-Host "   4. Import sample workflows from .\workflows\" -ForegroundColor White
+Write-Host "  📋 NEXT STEPS:" -ForegroundColor Yellow
+Write-Host "     1. Verify installation:" -ForegroundColor White
+Write-Host "        .\scripts\verify-windows.ps1" -ForegroundColor Cyan
+Write-Host "     2. Open OpenWebUI (" -NoNewline -ForegroundColor White
+Write-Host "http://localhost:3000" -NoNewline -ForegroundColor Cyan
+Write-Host ") and create an account" -ForegroundColor White
+Write-Host "     3. Open N8N (" -NoNewline -ForegroundColor White
+Write-Host "http://localhost:5678" -NoNewline -ForegroundColor Cyan
+Write-Host ") and set up credentials" -ForegroundColor White
+Write-Host "     4. Import sample workflows from .\workflows\" -ForegroundColor White
 Write-Host ""
-Write-Host "📄 Documentation:" -ForegroundColor Cyan
-Write-Host "   • Quick Start:     docs\QUICK_START.md" -ForegroundColor White
-Write-Host "   • Configuration:   docs\CONFIGURATION.md" -ForegroundColor White
-Write-Host "   • Troubleshooting: docs\TROUBLESHOOTING.md" -ForegroundColor White
-Write-Host "   • Workflows:       workflows\README.md" -ForegroundColor White
+Write-Host "  📄 DOCUMENTATION:" -ForegroundColor Cyan
+Write-Host "     • Quick Start:     " -NoNewline -ForegroundColor White
+Write-Host "docs\QUICK_START.md" -ForegroundColor Cyan
+Write-Host "     • Configuration:   " -NoNewline -ForegroundColor White
+Write-Host "docs\CONFIGURATION.md" -ForegroundColor Cyan
+Write-Host "     • Troubleshooting: " -NoNewline -ForegroundColor White
+Write-Host "docs\TROUBLESHOOTING.md" -ForegroundColor Cyan
+Write-Host "     • Workflows:       " -NoNewline -ForegroundColor White
+Write-Host "workflows\README.md" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "Happy building! 🚀" -ForegroundColor Green
+Write-Host "  🚀 Happy building!" -ForegroundColor Green
 Write-Host ""
 
 # Stop transcript if logging was enabled

@@ -98,7 +98,7 @@ Storage:  100GB+ SSD
 ## ✅ Workshop Hardware Checklist
 
 **Minimum requirements for attendees:**
-- [ ] Windows 10/11 (64-bit)
+- [ ] Windows 10/11 (64-bit) or macOS 12.0 (Monterey) and later
 - [ ] 8GB RAM
 - [ ] 4+ CPU cores
 - [ ] 20GB free disk space

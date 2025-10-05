@@ -133,7 +133,7 @@ For detailed agenda and learning objectives, see [Workshop Goals](./docs/GOALS.m
 
 ## 🔗 Useful Links
 
-- [N8N Documentation](https://docs.n8n.io/)
+- [n8n Documentation](https://docs.n8n.io/)
 - [Ollama Model Library](https://ollama.ai/library)
 - [OpenWebUI GitHub](https://github.com/open-webui/open-webui)
 - [Go to Agentic Conference](https://www.gotoagentic.ai/)

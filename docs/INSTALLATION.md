@@ -8,7 +8,7 @@ This guide walks you through installing all required components for the workshop
 ## 📋 System Requirements
 
 ### Recommended Specifications
-- **OS**: Windows 10/11 (64-bit) with WSL2
+- **OS**: Windows 10/11 (64-bit) with WSL2 or macOS 12.0 (Monterey) and later
 - **RAM**: 16GB+ (8GB minimum)
 - **Storage**: 20GB+ free space
 - **CPU**: 4+ cores

@@ -2,22 +2,21 @@
 
 Get up and running in 15 minutes! ⚡
 
-> **✨ NEW in v1.1.0:** Setup scripts now include idempotency (won't restart already-running containers), comprehensive health checks, and improved error messages with actionable troubleshooting!
-
 ---
 
 ## Prerequisites
 
 ### Minimum Requirements
-- **OS**: Windows 10/11 with WSL2
+- **OS**: Windows 10/11 with WSL2 or macOS 12.0 (Monterey) and later
 - **RAM**: 8GB (16GB+ recommended)
 - **Storage**: 20GB free disk space
 - **Docker**: Docker Desktop installed and running
 
-**💡 Tips**: 
-- The first request pays the model load cost; keep the container warm for fast responses
-- GPU acceleration improves throughput but is NOT required (CPU-only runs are supported)
-- If you have 8GB RAM, start with `llama3.2:1b` (1GB model)
+**💡 Performance Tips**: 
+- **First Request Delay**: The initial request takes longer as the model loads into memory. This is normal and only happens once per session.
+- **Keep the Model Warm**: To maintain fast responses, keep your Docker containers running. The model stays loaded in memory as long as the Ollama container is active.
+- **Resource Management**: If you have 8GB RAM, use the smaller `llama3.2:1b` (1GB) model for better performance.
+- **GPU Acceleration**: While not required, using a GPU will significantly speed up responses. The system works well on CPU too.
 
 ---
 
@@ -59,7 +58,7 @@ ENABLE_LOGGING=1 ./scripts/setup-mac.sh
 - ✓ Download an LLM model (optional, skips if already present)
 - ✓ Provide detailed troubleshooting if anything fails
 
-**Smart features in v1.1.0:**
+**Key Features:**
 - **Idempotency**: If containers are already running, prompts before restarting
 - **Health Checks**: Waits up to 60s for each container to be healthy
 - **Pre-flight Validation**: Checks Docker daemon, disk space, and network before starting
@@ -85,7 +84,7 @@ ENABLE_LOGGING=1 ./scripts/setup-mac.sh
 - ✓ Ollama models available
 - ✓ Container resource usage
 
-**Improved in v1.1.0:**
+**Troubleshooting Improvements:**
 - **Prioritized Troubleshooting**: Errors shown in fix-order (Docker → Containers → Ports → Endpoints)
 - **Container Status Differentiation**: Distinguishes between stopped vs missing containers
 - **Smart Model Guidance**: Suggests specific models based on your RAM
