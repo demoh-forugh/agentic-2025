@@ -54,17 +54,36 @@ For detailed value proposition and cost analysis, see [Workshop Goals](./docs/GO
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Getting Started
 
 > **✨ NEW:** All setup scripts upgraded to v1.1.1 with improved error handling, health checks, and idempotency! Character encoding fixes ensure clean output on all platforms. See [archive/testing-v1.1.1](./archive/testing-v1.1.1/) for complete testing documentation.
 
-1. **[Quick Start Guide](./docs/QUICK_START.md)** - Get running in 15 minutes
-2. **[Installation Guide](./docs/INSTALLATION.md)** - Step-by-step setup instructions
-3. **[Configuration Guide](./docs/CONFIGURATION.md)** - Google API and service setup
-4. **[Sample Workflows](./workflows/)** - Ready-to-import n8n workflows
-5. **[System Specs Reference](./docs/SYSTEM_SPECS.md)** - Detailed hardware information
-6. **[Specs Summary](./docs/SPECS_SUMMARY.md)** - Quick spec comparison
-7. **[Troubleshooting](./docs/TROUBLESHOOTING.md)** - Common issues and solutions
+### First-Time Setup (Follow in Order)
+
+**Step 1:** Check if your system meets the requirements
+- **[System Specs Summary](./docs/SPECS_SUMMARY.md)** - Quick hardware check (30 seconds)
+
+**Step 2:** Install and run the workshop stack
+- **[Quick Start Guide](./docs/QUICK_START.md)** - 15-minute automated setup
+- OR **[Installation Guide](./docs/INSTALLATION.md)** - Detailed step-by-step instructions
+
+**Step 3:** Import and test your first workflow
+- **[Sample Workflows](./workflows/)** - 6 ready-to-import n8n workflows
+- Start with `01-hello-world.json` to test Ollama integration
+
+**Step 4 (Optional):** Enable Google API workflows
+- **[Configuration Guide](./docs/CONFIGURATION.md)** - Google OAuth setup for Gmail, Calendar, Docs
+
+### When You Need Help
+
+- **[Troubleshooting Guide](./docs/TROUBLESHOOTING.md)** - Common issues and solutions
+- **[n8n Credentials Setup](./docs/n8n/CREDENTIALS-SETUP-GUIDE.md)** - Detailed credential configuration reference
+
+### Advanced Topics
+
+- **[System Specs Reference](./docs/SYSTEM_SPECS.md)** - Detailed hardware information
+- **[Database Queries](./docs/DATABASE_QUERIES.md)** - PostgreSQL examples for workflows
+- **[Advanced Topics](./docs/ADVANCED.md)** - Production deployment and scaling
 
 ---
 
@@ -85,6 +104,8 @@ demos/
 │   ├── DATA_POLICY.md                # Data measurement policy
 │   ├── DATABASE_QUERIES.md           # PostgreSQL query examples for n8n
 │   └── n8n/
+│       ├── CREDENTIALS-SETUP-GUIDE.md # How credential overwrites work (detailed)
+│       ├── CREDS-OVERWRITE.md        # Credential overwrite reference
 │       └── CONFIG.md                 # n8n configuration reference (vendor docs)
 ├── workflows/
 │   ├── README.md                     # Workflow documentation
@@ -98,6 +119,7 @@ demos/
 │   ├── docker-compose.yml            # Docker stack definition
 │   ├── docker-compose.gpu.yml        # GPU override (Windows)
 │   ├── docker-compose.ollama-host.yml # Host Ollama override (macOS)
+│   ├── n8n-credentials-overwrite.json # Pre-configured credentials (Ollama, PostgreSQL)
 │   └── .env.example                  # Environment variables template
 ├── scripts/
 │   ├── setup-windows.ps1             # Windows automated setup

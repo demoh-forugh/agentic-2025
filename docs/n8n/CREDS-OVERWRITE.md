@@ -1,22 +1,35 @@
 # n8n Credentials Configuration
 
+## ⚠️ Important Understanding
+
+**CREDENTIALS_OVERWRITE_DATA does NOT automatically create credentials.** It only pre-fills field values when users manually create new credentials in the n8n UI.
+
+### What It Does
+- Pre-fills credential field values (like baseUrl, host, password)
+- Hides overwritten fields from users (they become read-only)
+- Useful for OAuth where you want "click to connect" without entering client secrets
+
+### What It Doesn't Do
+- ❌ Does not automatically create credential entries
+- ❌ Does not automatically assign credentials to imported workflows
+- ❌ Workflows imported with credential references will still prompt users to select/create credentials
+
 ## Environment Variables for Credentials
 
 Source: [n8n Documentation - Credentials Environment Variables](https://docs.n8n.io/hosting/configuration/environment-variables/credentials/)
 
-### File-based Configuration
-
-You can add `_FILE` to individual variables to provide their configuration in a separate file. Refer to [Keeping sensitive data in separate files](#keeping-sensitive-data-in-separate-files) for more details.
-
 ### Enable Credential Overwrites
 
-Use the following environment variables to enable credential overwrites. Refer to [Credential overwrites](#credential-overwrites) for details.
+Use the following environment variables to enable credential overwrites.
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
-| `CREDENTIALS_OVERWRITE_DATA` or `CREDENTIALS_OVERWRITE_DATA_FILE` | * | - | Overwrites for credentials. |
-| `CREDENTIALS_OVERWRITE_ENDPOINT` | String | - | The API endpoint to fetch credentials. |
-| `CREDENTIALS_DEFAULT_NAME` | String | "My credentials" | The default name for credentials. |
+| `CREDENTIALS_OVERWRITE_DATA` | JSON | - | Inline JSON with credential overwrites (not recommended due to escaping issues) |
+| `CREDENTIALS_OVERWRITE_DATA_FILE` | String | - | Path to JSON file with credential overwrites (recommended) |
+| `CREDENTIALS_OVERWRITE_ENDPOINT` | String | - | REST API endpoint to fetch credentials dynamically |
+| `CREDENTIALS_DEFAULT_NAME` | String | "My credentials" | The default name for credentials |
+
+**Security Note:** Using environment variables for credentials isn't recommended, as environment variables aren't protected in n8n and the data can leak to users. The recommended approach is loading data via `CREDENTIALS_OVERWRITE_ENDPOINT`.
 
 ## Configuration Methods
 

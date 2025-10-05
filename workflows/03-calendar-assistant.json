@@ -56,13 +56,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
       "typeVersion": 1,
       "position": [650, 300],
-      "notes": "AI ANALYSIS: Analyzes calendar availability and suggests optimal meeting times",
-      "credentials": {
-        "ollamaApi": {
-          "id": "1",
-          "name": "Ollama Local"
-        }
-      }
+      "notes": "AI ANALYSIS: Analyzes calendar availability and suggests optimal meeting times"
     },
     {
       "parameters": {

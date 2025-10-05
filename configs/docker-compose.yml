@@ -56,13 +56,14 @@ services:
       # Ollama connection
       - OLLAMA_HOST=http://ollama:11434
       # Pre-configure Ollama and PostgreSQL credentials for users (no manual setup needed!)
-      - CREDENTIALS_OVERWRITE_DATA={"ollamaApi":{"baseUrl":"http://ollama:11434"},"postgres":{"host":"postgres","port":5432,"database":"workshop_db","user":"workshop","password":"workshop_password","ssl":"disable"}}
+      - CREDENTIALS_OVERWRITE_DATA_FILE=/data/credentials-overwrite.json
       # Optional: Google OAuth (set in .env)
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
     volumes:
       - n8n_data:/home/node/.n8n
       - ./workflows:/workflows:ro
+      - ./configs/n8n-credentials-overwrite.json:/data/credentials-overwrite.json:ro
     depends_on:
       - ollama
     restart: unless-stopped

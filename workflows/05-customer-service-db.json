@@ -74,13 +74,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
       "typeVersion": 1,
       "position": [1050, 250],
-      "notes": "AI ANALYSIS: Analyzes ticket sentiment, categorizes, and suggests responses",
-      "credentials": {
-        "ollamaApi": {
-          "id": "1",
-          "name": "Ollama Local"
-        }
-      }
+      "notes": "AI ANALYSIS: Analyzes ticket sentiment, categorizes, and suggests responses"
     },
     {
       "parameters": {

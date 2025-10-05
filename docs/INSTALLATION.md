@@ -127,19 +127,23 @@ Test Ollama integration with the Hello World workflow using n8n's built-in impor
 4. Browse to the `workflows/` folder
 5. Select **`01-hello-world.json`** and click **Open**
 6. The workflow will load on the canvas
-7. ✨ **That's it!** Credentials are **automatically pre-configured** - no manual setup needed!
-   - **Ollama API**: Pre-configured to use `http://ollama:11434`
-   - **PostgreSQL**: Pre-configured with connection to `postgres` container
-   - Import any workflow and it just works! 🎉
+7. **Create Ollama Credential (One-Time Setup):**
+   - You'll see the "Ollama Chat Model" node has a credential warning
+   - Click the node, then click **"Credential to connect with"** dropdown
+   - Select **"Create New Credential"**
+   - The **Base URL is automatically pre-filled** with `http://ollama:11434` (read-only)
+   - Click **"Save"** - done! ✅
 8. Click **"Execute Workflow"** button in the top toolbar
 9. View the output in the **"Format Response"** node - see AI output! 🎉
 
-**Why does it work automatically?**
-The docker-compose.yml includes `CREDENTIALS_OVERWRITE_DATA` which pre-configures both Ollama and PostgreSQL credentials:
-- **Ollama**: `{"ollamaApi":{"baseUrl":"http://ollama:11434"}}`
-- **PostgreSQL**: Host `postgres`, Database `workshop_db`, User `workshop`
+**Why is credential setup so easy?**
+The docker-compose.yml uses `CREDENTIALS_OVERWRITE_DATA_FILE` to automatically pre-fill credential connection details:
+- **Ollama API**: Base URL `http://ollama:11434` (not localhost!)
+- **PostgreSQL**: Host `postgres`, Port `5432`, Database `workshop_db`, User `workshop`
 
-This uses Docker's service discovery where containers communicate using service names as hostnames on the shared `ai-network`.
+Docker service discovery allows containers to communicate using service names as hostnames on the shared `ai-network`.
+
+**Important:** You only create each credential type once. After that, all workflows automatically use the same credentials!
 
 **Example path to workflows:**
 - Windows: `C:\Users\YourName\Documents\demos\workflows\01-hello-world.json`
@@ -150,17 +154,18 @@ This uses Docker's service discovery where containers communicate using service 
 
 We've included **6 production-ready workflows** for real business use cases:
 
-| Workflow | Description | Credentials Needed |
-|----------|-------------|-------------------|
-| `01-hello-world.json` | Test Ollama integration | ✅ Pre-configured |
-| `02-gmail-agent.json` | Email triage & auto-categorization | Google OAuth* |
-| `03-calendar-assistant.json` | Smart meeting scheduling | Google OAuth* |
-| `04-document-processor.json` | Auto-generate reports from data | Google OAuth* |
-| `05-customer-service-db.json` | Database-powered customer support | ✅ Pre-configured (PostgreSQL) |
-| `06-lead-scoring-crm.json` | AI lead qualification & scoring | ✅ Pre-configured (PostgreSQL) |
+| Workflow | Description | Setup Needed |
+|----------|-------------|--------------|
+| `01-hello-world.json` | Test Ollama integration | ✅ Ollama credential (one-time) |
+| `02-gmail-agent.json` | Email triage & auto-categorization | Ollama + Google OAuth* |
+| `03-calendar-assistant.json` | Smart meeting scheduling | Ollama + Google OAuth* |
+| `04-document-processor.json` | Auto-generate reports from data | Ollama + Google OAuth* |
+| `05-customer-service-db.json` | Database-powered customer support | Ollama + PostgreSQL credentials |
+| `06-lead-scoring-crm.json` | AI lead qualification & scoring | Ollama + PostgreSQL credentials |
 
 *Google API credentials required - see [CONFIGURATION.md](./CONFIGURATION.md)
-✅ = Works immediately with pre-configured Ollama and PostgreSQL credentials!
+
+**When you import workflows:** n8n will prompt you to create credentials. All connection details (URLs, hosts, ports, passwords) are automatically pre-filled - you just click "Save"!
 
 **📚 Full Workflow Documentation:** [workflows/README.md](../workflows/README.md)
 

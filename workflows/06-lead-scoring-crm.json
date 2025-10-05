@@ -85,13 +85,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
       "typeVersion": 1,
       "position": [650, 300],
-      "notes": "AI SCORING: Analyzes lead data and generates qualification score with recommendations",
-      "credentials": {
-        "ollamaApi": {
-          "id": "1",
-          "name": "Ollama Local"
-        }
-      }
+      "notes": "AI SCORING: Analyzes lead data and generates qualification score with recommendations"
     },
     {
       "parameters": {

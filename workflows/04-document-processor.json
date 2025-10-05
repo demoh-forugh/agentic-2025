@@ -56,13 +56,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
       "typeVersion": 1,
       "position": [850, 300],
-      "notes": "AI PROCESSING: Generates comprehensive business report from aggregated data",
-      "credentials": {
-        "ollamaApi": {
-          "id": "1",
-          "name": "Ollama Local"
-        }
-      }
+      "notes": "AI PROCESSING: Generates comprehensive business report from aggregated data"
     },
     {
       "parameters": {

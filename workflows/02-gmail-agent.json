@@ -105,13 +105,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
       "typeVersion": 1,
       "position": [1250, 250],
-      "notes": "AI ANALYSIS: Uses Ollama to categorize email and suggest actions",
-      "credentials": {
-        "ollamaApi": {
-          "id": "1",
-          "name": "Ollama Local"
-        }
-      }
+      "notes": "AI ANALYSIS: Uses Ollama to categorize email and suggest actions"
     },
     {
       "parameters": {

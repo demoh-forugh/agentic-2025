@@ -34,12 +34,6 @@
       "position": [-20, 540],
       "id": "571e833c-741f-4f46-9893-3d818f002452",
       "name": "Ollama Chat Model",
-      "credentials": {
-        "ollamaApi": {
-          "id": "1",
-          "name": "Ollama Local"
-        }
-      },
       "notes": "AI PROCESSING: Uses local Ollama LLM (llama3.2:1b) for generating responses"
     },
     {
