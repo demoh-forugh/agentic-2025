@@ -564,7 +564,7 @@ if ($downloadModel -eq "" -or $downloadModel -eq "Y" -or $downloadModel -eq "y")
         
         Write-Host ""
         Write-Host "  >> You can download additional models later with:" -ForegroundColor Cyan
-        Write-Host "     docker exec -it ollama ollama pull <model-name>" -ForegroundColor DarkGray
+        Write-Host "     docker exec -it ollama ollama pull [model-name]" -ForegroundColor DarkGray
     }
 }
 
@@ -577,7 +577,7 @@ Write-Host ""
 # Summary of what was accomplished
 Write-Host "  [COMPLETED]" -ForegroundColor Green
 Write-Host "     * Docker verified and running" -ForegroundColor White
-Write-Host "     * Configuration files prepared (.env, docker-compose.yml)" -ForegroundColor White
+Write-Host "     * Configuration files prepared (`.env, docker-compose.yml)" -ForegroundColor White
 Write-Host "     * Containers started: ollama, n8n, open-webui, postgres" -ForegroundColor White
 
 $modelCount = 0

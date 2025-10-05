@@ -420,9 +420,9 @@ if [[ ${#OLLAMA_CMD[@]} -gt 0 ]]; then
         echo ""
         echo "  >> You can download additional models later with:"
         if [[ "${USE_HOST_OLLAMA:-0}" == "1" ]]; then
-          echo "     ollama pull <model-name>"
+          echo "     ollama pull [model-name]"
         else
-          echo "     docker exec -it ollama ollama pull <model-name>"
+          echo "     docker exec -it ollama ollama pull [model-name]"
         fi
       fi
     fi
