@@ -7,7 +7,8 @@
       "name": "Manual Trigger",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
-      "position": [250, 300]
+      "position": [250, 300],
+      "notes": "TRIGGER: Manual start for document generation workflow"
     },
     {
       "parameters": {
@@ -23,6 +24,7 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 3,
       "position": [450, 300],
+      "notes": "DATA SOURCE: Retrieves raw data from Google Sheets for processing",
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "1",
@@ -38,10 +40,12 @@
       "name": "Aggregate Data",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [650, 300]
+      "position": [650, 300],
+      "notes": "DATA PROCESSING: Aggregates and formats sheet data for AI analysis"
     },
     {
       "parameters": {
+        "model": "llama3.2:1b",
         "prompt": "=You are a professional report writer. Create a comprehensive business report based on the following data:\n\n{{ JSON.stringify($json, null, 2) }}\n\nGenerate a well-structured report with:\n1. Executive Summary\n2. Key Findings\n3. Data Analysis\n4. Trends and Patterns\n5. Recommendations\n6. Conclusion\n\nFormat the output in Markdown for easy conversion to Google Docs.",
         "options": {
           "temperature": 0.5
@@ -49,9 +53,10 @@
       },
       "id": "ollama-generate-report-001",
       "name": "Generate Report with AI",
-      "type": "n8n-nodes-base.ollama",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
       "typeVersion": 1,
       "position": [850, 300],
+      "notes": "AI PROCESSING: Generates comprehensive business report from aggregated data",
       "credentials": {
         "ollamaApi": {
           "id": "1",
@@ -67,7 +72,8 @@
       "name": "Format for Google Docs",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1050, 300]
+      "position": [1050, 300],
+      "notes": "FORMATTING: Converts Markdown report to Google Docs format"
     },
     {
       "parameters": {
@@ -80,6 +86,7 @@
       "type": "n8n-nodes-base.googleDocs",
       "typeVersion": 1,
       "position": [1250, 300],
+      "notes": "DOCUMENT CREATION: Creates new Google Doc with generated title",
       "credentials": {
         "googleDocsOAuth2Api": {
           "id": "1",
@@ -106,6 +113,7 @@
       "type": "n8n-nodes-base.googleDocs",
       "typeVersion": 1,
       "position": [1450, 300],
+      "notes": "CONTENT INSERTION: Adds AI-generated report content to the document",
       "credentials": {
         "googleDocsOAuth2Api": {
           "id": "1",
@@ -145,7 +153,8 @@
       "name": "Format Output",
       "type": "n8n-nodes-base.set",
       "typeVersion": 1,
-      "position": [1650, 300]
+      "position": [1650, 300],
+      "notes": "OUTPUT FORMATTING: Structures final results with document metadata"
     },
     {
       "parameters": {
@@ -159,7 +168,7 @@
       "typeVersion": 1,
       "position": [1850, 300],
       "disabled": true,
-      "notes": "Enable this node and configure Slack credentials if you want notifications"
+      "notes": "NOTIFICATION: Optional Slack notification when report is complete (disabled by default)"
     }
   ],
   "connections": {
@@ -259,7 +268,8 @@
   "versionId": "1",
   "id": "4",
   "meta": {
-    "instanceId": "workshop-demo"
+    "instanceId": "workshop-demo",
+    "templateCredsSetupCompleted": true
   },
   "tags": [
     {
@@ -274,5 +284,6 @@
       "name": "agent",
       "id": "4"
     }
-  ]
+  ],
+  "pinData": {}
 }

@@ -7,7 +7,8 @@
       "name": "Manual Trigger",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
-      "position": [250, 300]
+      "position": [250, 300],
+      "notes": "TRIGGER: Manual start for customer service ticket processing"
     },
     {
       "parameters": {
@@ -20,6 +21,7 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2,
       "position": [450, 300],
+      "notes": "DATABASE QUERY: Fetches up to 10 open customer support tickets",
       "credentials": {
         "postgres": {
           "id": "1",
@@ -43,7 +45,8 @@
       "name": "Has Tickets?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
-      "position": [650, 300]
+      "position": [650, 300],
+      "notes": "CONDITION: Checks if there are any tickets to process"
     },
     {
       "parameters": {
@@ -54,10 +57,12 @@
       "name": "Process Each Ticket",
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
-      "position": [850, 250]
+      "position": [850, 250],
+      "notes": "DATA PROCESSING: Splits tickets to process each one individually"
     },
     {
       "parameters": {
+        "model": "llama3.2:1b",
         "prompt": "=You are a customer service AI assistant. Analyze this support ticket and provide a JSON response.\n\nTicket Details:\n- ID: {{ $json.id }}\n- From: {{ $json.customer_email }}\n- Subject: {{ $json.subject }}\n- Message: {{ $json.message }}\n- Current Priority: {{ $json.priority }}\n- Status: {{ $json.status }}\n- Created: {{ $json.created_at }}\n\nProvide:\n1. sentiment_score: Float between -1.0 (very negative) and 1.0 (very positive)\n2. category: One of (technical, billing, feature_request, complaint, inquiry)\n3. suggested_priority: One of (low, medium, high, urgent)\n4. key_issues: Array of main problems identified\n5. suggested_response: A professional, empathetic response template\n6. estimated_resolution_time: Estimated time to resolve (in hours)\n7. requires_escalation: Boolean if needs manager attention",
         "options": {
           "temperature": 0.3,
@@ -66,9 +71,10 @@
       },
       "id": "ollama-analyze-ticket-001",
       "name": "AI Analyzes Ticket",
-      "type": "n8n-nodes-base.ollama",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
       "typeVersion": 1,
       "position": [1050, 250],
+      "notes": "AI ANALYSIS: Analyzes ticket sentiment, categorizes, and suggests responses",
       "credentials": {
         "ollamaApi": {
           "id": "1",
@@ -87,6 +93,7 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2,
       "position": [1250, 250],
+      "notes": "DATABASE UPDATE: Updates ticket with AI analysis results",
       "credentials": {
         "postgres": {
           "id": "1",
@@ -122,6 +129,7 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2,
       "position": [1450, 250],
+      "notes": "DATABASE INSERT: Saves AI-generated response template to database",
       "credentials": {
         "postgres": {
           "id": "1",
@@ -144,7 +152,8 @@
       "name": "Needs Escalation?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
-      "position": [1650, 250]
+      "position": [1650, 250],
+      "notes": "CONDITION: Routes tickets that need manager attention"
     },
     {
       "parameters": {
@@ -161,6 +170,7 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [1850, 150],
+      "notes": "ESCALATION: Sends detailed email to manager for urgent tickets",
       "credentials": {
         "gmailOAuth2": {
           "id": "1",
@@ -179,6 +189,7 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2,
       "position": [2050, 150],
+      "notes": "DATABASE UPDATE: Marks ticket status as escalated",
       "credentials": {
         "postgres": {
           "id": "1",
@@ -196,7 +207,8 @@
       "name": "Aggregate All Results",
       "type": "n8n-nodes-base.aggregate",
       "typeVersion": 1,
-      "position": [2250, 250]
+      "position": [2250, 250],
+      "notes": "DATA AGGREGATION: Combines all processed ticket results"
     },
     {
       "parameters": {
@@ -209,6 +221,7 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2,
       "position": [2450, 250],
+      "notes": "REPORTING: Generates summary statistics of all ticket processing",
       "credentials": {
         "postgres": {
           "id": "1",
@@ -354,7 +367,8 @@
   "versionId": "1",
   "id": "5",
   "meta": {
-    "instanceId": "workshop-demo"
+    "instanceId": "workshop-demo",
+    "templateCredsSetupCompleted": true
   },
   "tags": [
     {
@@ -369,5 +383,6 @@
       "name": "customer-service",
       "id": "6"
     }
-  ]
+  ],
+  "pinData": {}
 }

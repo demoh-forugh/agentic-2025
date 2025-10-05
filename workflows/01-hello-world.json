@@ -2,31 +2,45 @@
   "name": "01 - Hello World with Ollama",
   "nodes": [
     {
-      "parameters": {},
-      "id": "a0b1c2d3-e4f5-6789-a0b1-c2d3e4f56789",
-      "name": "When clicking 'Test workflow'",
-      "type": "n8n-nodes-base.manualTrigger",
-      "typeVersion": 1,
-      "position": [250, 300]
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.3,
+      "position": [-180, 300],
+      "id": "e65a44bb-ada9-4f5e-a7b2-8495323fab6f",
+      "name": "When chat message received",
+      "webhookId": "4be892dd-af32-46ca-8f78-365944d619fc",
+      "notes": "TRIGGER: Chat interface trigger - type messages to interact with the AI"
     },
     {
       "parameters": {
-        "prompt": "=Hello! Please introduce yourself and explain what you can help with in 2-3 sentences.",
-        "options": {
-          "temperature": 0.7
-        }
+        "options": {}
       },
-      "id": "b1c2d3e4-f5a6-789a-b1c2-d3e4f5a67890",
-      "name": "Chat with Ollama",
-      "type": "n8n-nodes-base.ollama",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [50, 300],
+      "id": "6be9b9e6-a949-4709-87d9-3c8873d99f48",
+      "name": "AI Agent",
+      "notes": "AI AGENT: Orchestrates conversation flow and manages LLM interactions"
+    },
+    {
+      "parameters": {
+        "model": "llama3.2:1b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
       "typeVersion": 1,
-      "position": [450, 300],
+      "position": [-20, 540],
+      "id": "571e833c-741f-4f46-9893-3d818f002452",
+      "name": "Ollama Chat Model",
       "credentials": {
         "ollamaApi": {
           "id": "1",
           "name": "Ollama Local"
         }
-      }
+      },
+      "notes": "AI PROCESSING: Uses local Ollama LLM (llama3.2:1b) for generating responses"
     },
     {
       "parameters": {
@@ -48,31 +62,43 @@
         },
         "options": {}
       },
-      "id": "c2d3e4f5-a678-9ab1-c2d3-e4f5a6789abc",
+      "id": "229d1499-f80b-4927-9999-898e94c6bf4e",
       "name": "Format Response",
       "type": "n8n-nodes-base.set",
       "typeVersion": 1,
-      "position": [650, 300]
+      "position": [400, 300],
+      "notes": "OUTPUT FORMATTING: Structures the AI response with metadata for display"
     }
   ],
   "connections": {
-    "When clicking 'Test workflow'": {
+    "When chat message received": {
       "main": [
         [
           {
-            "node": "Chat with Ollama",
+            "node": "AI Agent",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Chat with Ollama": {
+    "AI Agent": {
       "main": [
         [
           {
             "node": "Format Response",
             "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
             "index": 0
           }
         ]
@@ -86,7 +112,8 @@
   "versionId": "1",
   "id": "1",
   "meta": {
-    "instanceId": "workshop-demo"
+    "instanceId": "workshop-demo",
+    "templateCredsSetupCompleted": true
   },
   "tags": [
     {
@@ -97,5 +124,6 @@
       "name": "beginner",
       "id": "2"
     }
-  ]
+  ],
+  "pinData": {}
 }

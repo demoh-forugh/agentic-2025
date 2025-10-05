@@ -13,6 +13,7 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
       "position": [250, 300],
+      "notes": "TRIGGER: Receives new lead data via webhook for scoring",
       "webhookId": "new-lead-webhook"
     },
     {
@@ -67,10 +68,12 @@
       "name": "Format Lead Data",
       "type": "n8n-nodes-base.set",
       "typeVersion": 1,
-      "position": [450, 300]
+      "position": [450, 300],
+      "notes": "DATA FORMATTING: Extracts and structures lead information from webhook"
     },
     {
       "parameters": {
+        "model": "llama3.2:1b",
         "prompt": "=You are a sales AI assistant specializing in lead qualification and scoring. Analyze this lead and provide a detailed JSON assessment.\n\nLead Information:\n- Name: {{ $json.lead_name }}\n- Email: {{ $json.lead_email }}\n- Company: {{ $json.company }}\n- Job Title: {{ $json.job_title }}\n- Company Size: {{ $json.company_size }}\n- Industry: {{ $json.industry }}\n- Budget Range: {{ $json.budget_range }}\n- Timeline: {{ $json.timeline }}\n- Pain Points: {{ $json.pain_points }}\n- Source: {{ $json.source }}\n\nProvide:\n1. lead_score: Integer 0-100 (likelihood to convert)\n2. qualification_status: One of (hot, warm, cold, disqualified)\n3. icp_match: Ideal Customer Profile match score 0-100\n4. urgency_score: Integer 0-10 (how soon they might buy)\n5. key_indicators: Array of positive signals you identified\n6. red_flags: Array of concerns or issues\n7. recommended_actions: Array of next steps for sales team\n8. assigned_priority: One of (p1_immediate, p2_high, p3_medium, p4_low)\n9. reasoning: Brief explanation of the score\n10. suggested_messaging: Tailored pitch angle based on pain points",
         "options": {
           "temperature": 0.4,
@@ -79,9 +82,10 @@
       },
       "id": "ollama-score-lead-001",
       "name": "AI Scores Lead",
-      "type": "n8n-nodes-base.ollama",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
       "typeVersion": 1,
       "position": [650, 300],
+      "notes": "AI SCORING: Analyzes lead data and generates qualification score with recommendations",
       "credentials": {
         "ollamaApi": {
           "id": "1",
@@ -157,7 +161,8 @@
       "name": "Merge Lead & Score Data",
       "type": "n8n-nodes-base.set",
       "typeVersion": 1,
-      "position": [850, 300]
+      "position": [850, 300],
+      "notes": "DATA MERGING: Combines original lead data with AI scoring results"
     },
     {
       "parameters": {
@@ -175,7 +180,8 @@
       "name": "Hot Lead? (≥70)",
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
-      "position": [1050, 300]
+      "position": [1050, 300],
+      "notes": "CONDITION: Routes high-scoring leads (≥70) for immediate attention"
     },
     {
       "parameters": {
@@ -232,6 +238,7 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 3,
       "position": [1250, 200],
+      "notes": "HOT LEADS TRACKING: Logs high-priority leads to dedicated sheet",
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "1",
@@ -252,6 +259,7 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [1450, 200],
+      "notes": "SALES ALERT: Sends detailed email to sales team for hot leads",
       "credentials": {
         "gmailOAuth2": {
           "id": "1",
@@ -306,6 +314,7 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 3,
       "position": [1250, 400],
+      "notes": "LEAD LOGGING: Records all leads with scores to master tracking sheet",
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "1",
@@ -323,7 +332,8 @@
       "name": "Response to Webhook",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [1650, 300]
+      "position": [1650, 300],
+      "notes": "RESPONSE: Returns lead scoring results and next steps to requester"
     }
   ],
   "connections": {
@@ -430,7 +440,8 @@
   "versionId": "1",
   "id": "6",
   "meta": {
-    "instanceId": "workshop-demo"
+    "instanceId": "workshop-demo",
+    "templateCredsSetupCompleted": true
   },
   "tags": [
     {
@@ -445,5 +456,6 @@
       "name": "crm",
       "id": "8"
     }
-  ]
+  ],
+  "pinData": {}
 }

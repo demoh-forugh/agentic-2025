@@ -16,7 +16,8 @@
       "name": "Every 15 Minutes",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1,
-      "position": [250, 300]
+      "position": [250, 300],
+      "notes": "TRIGGER: Automatically runs every 15 minutes to check for new emails"
     },
     {
       "parameters": {
@@ -32,6 +33,7 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [450, 300],
+      "notes": "EMAIL FETCH: Retrieves up to 10 unread emails from Gmail inbox",
       "credentials": {
         "googleApi": {
           "id": "1",
@@ -55,7 +57,8 @@
       "name": "Has Unread Emails?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
-      "position": [650, 300]
+      "position": [650, 300],
+      "notes": "CONDITION: Checks if there are any unread emails to process"
     },
     {
       "parameters": {
@@ -66,7 +69,8 @@
       "name": "Split Emails",
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 1,
-      "position": [850, 250]
+      "position": [850, 250],
+      "notes": "DATA PROCESSING: Splits email list to process each email individually"
     },
     {
       "parameters": {
@@ -79,6 +83,7 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [1050, 250],
+      "notes": "EMAIL DETAILS: Fetches full email content including headers and body",
       "credentials": {
         "googleApi": {
           "id": "1",
@@ -88,6 +93,7 @@
     },
     {
       "parameters": {
+        "model": "llama3.2:1b",
         "prompt": "=Analyze this email and provide a JSON response with: category (urgent/important/normal/spam), priority (1-5), summary (1 sentence), and suggested_action (reply/archive/flag/delete).\n\nFrom: {{ $json.payload.headers.find(h => h.name === 'From').value }}\nSubject: {{ $json.payload.headers.find(h => h.name === 'Subject').value }}\nBody: {{ $json.snippet }}",
         "options": {
           "temperature": 0.3,
@@ -96,9 +102,10 @@
       },
       "id": "ollama-analyze-001",
       "name": "Analyze with AI",
-      "type": "n8n-nodes-base.ollama",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
       "typeVersion": 1,
       "position": [1250, 250],
+      "notes": "AI ANALYSIS: Uses Ollama to categorize email and suggest actions",
       "credentials": {
         "ollamaApi": {
           "id": "1",
@@ -146,7 +153,8 @@
       "name": "Format Results",
       "type": "n8n-nodes-base.set",
       "typeVersion": 1,
-      "position": [1450, 250]
+      "position": [1450, 250],
+      "notes": "DATA FORMATTING: Structures AI analysis results with email metadata"
     },
     {
       "parameters": {
@@ -162,6 +170,7 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [1650, 200],
+      "notes": "EMAIL ACTION: Stars urgent emails for easy identification",
       "credentials": {
         "googleApi": {
           "id": "1",
@@ -185,7 +194,8 @@
       "name": "Is Urgent?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
-      "position": [1650, 250]
+      "position": [1650, 250],
+      "notes": "CONDITION: Routes urgent emails for special handling"
     },
     {
       "parameters": {
@@ -230,6 +240,7 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 3,
       "position": [1850, 250],
+      "notes": "LOGGING: Records all processed emails with AI analysis to Google Sheets",
       "credentials": {
         "googleApi": {
           "id": "1",
@@ -353,7 +364,8 @@
   "versionId": "1",
   "id": "2",
   "meta": {
-    "instanceId": "workshop-demo"
+    "instanceId": "workshop-demo",
+    "templateCredsSetupCompleted": true
   },
   "tags": [
     {
@@ -368,5 +380,6 @@
       "name": "agent",
       "id": "4"
     }
-  ]
+  ],
+  "pinData": {}
 }

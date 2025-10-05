@@ -51,7 +51,6 @@ $env:ENABLE_LOGGING="1"
 
 # Optional: Enable detailed logging
 ENABLE_LOGGING=1 ./scripts/setup-mac.sh
-ENABLE_LOGGING=1 ./scripts/setup-mac.sh
 ```
 
 **What the setup script does:**
@@ -206,18 +205,23 @@ docker exec -it ollama ollama list
 
 **Try the Hello World workflow to test Ollama integration using n8n's built-in import:**
 
-1. In n8n, click the **"..."** menu button (top right corner) → **"Import from File"**
-2. In the file browser, navigate to where you cloned this repository
-3. Browse to the **`workflows/`** folder inside your repository
-4. Select **`01-hello-world.json`** and click **Open**
-5. The workflow will appear on the canvas
-6. Configure the Ollama credential (first time only):
-   - Click the **"AI Model"** node (Ollama node)
-   - Click **"Add credential"**
-   - Enter URL: `http://ollama:11434`
-   - Click **"Save"**
-7. Click **"Execute Workflow"** button in the top toolbar
-8. View the output in the **"Format Response"** node - see your LLM respond! 🎉
+1. In n8n, create a new workflow and name it "Hello World"
+2. Click the **"..."** menu button (top right corner) → **"Import from File"**
+3. In the file browser, navigate to where you cloned this repository
+4. Browse to the **`workflows/`** folder inside your repository
+5. Select **`01-hello-world.json`** and click **Open**
+6. The workflow will appear on the canvas
+7. ✨ **That's it!** Credentials are **automatically pre-configured** - no manual setup needed!
+   - **Ollama**: Pre-configured to use `http://ollama:11434`
+   - **PostgreSQL**: Pre-configured to connect to `postgres` container with workshop database
+   - Just import workflows and they work! 🎉
+8. Click **"Execute Workflow"** button in the top toolbar
+9. View the output in the **"Format Response"** node - see your LLM respond! 🎉
+
+**Why does it work automatically?**
+The docker-compose.yml includes `CREDENTIALS_OVERWRITE_DATA` which pre-configures both Ollama and PostgreSQL credentials with the correct connection details. All containers communicate using service names as hostnames on the shared Docker network (`ai-network`), so:
+- Ollama API → `http://ollama:11434`
+- PostgreSQL → `postgres:5432` (database: `workshop_db`, user: `workshop`)
 
 **Example paths to find your workflows:**
 - **Windows**: `C:\Users\YourName\Documents\demos\workflows\01-hello-world.json`
@@ -230,18 +234,29 @@ docker exec -it ollama ollama list
 
 We've included **6 production-ready workflows** for common business use cases:
 
-| Workflow | Use Case | Setup Time |
-|----------|----------|------------|
-| `01-hello-world.json` | Test Ollama integration | 2 min |
-| `02-gmail-agent.json` | Email triage & categorization | 15 min* |
-| `03-calendar-assistant.json` | Smart meeting scheduling | 15 min* |
-| `04-document-processor.json` | Auto-generate reports | 15 min* |
-| `05-customer-service-db.json` | Database-powered support | 5 min |
-| `06-lead-scoring-crm.json` | AI lead qualification | 5 min |
+| Workflow | Use Case | Credentials Needed |
+|----------|----------|-------------------|
+| `01-hello-world.json` | Test Ollama integration | ✅ Pre-configured |
+| `02-gmail-agent.json` | Email triage & categorization | Google OAuth* |
+| `03-calendar-assistant.json` | Smart meeting scheduling | Google OAuth* |
+| `04-document-processor.json` | Auto-generate reports | Google OAuth* |
+| `05-customer-service-db.json` | Database-powered support | ✅ Pre-configured (PostgreSQL) |
+| `06-lead-scoring-crm.json` | AI lead qualification | ✅ Pre-configured (PostgreSQL) |
 
-*Requires Google API credentials (see [CONFIGURATION.md](./CONFIGURATION.md))
+*Google OAuth credentials required (see [CONFIGURATION.md](./CONFIGURATION.md))
+✅ = Works immediately with pre-configured credentials!
 
 **📚 Full Workflow Documentation:** See [workflows/README.md](../workflows/README.md) for detailed setup instructions, business value, and examples for each workflow.
+
+**🔑 Pre-configured Credentials Reference:**
+- **Ollama API**: `http://ollama:11434` (local LLM runtime)
+- **PostgreSQL**:
+  - Host: `postgres`
+  - Port: `5432`
+  - Database: `workshop_db`
+  - User: `workshop`
+  - Password: `workshop_password`
+  - Sample tables: `customer_tickets`, `customer_responses`, `sales_data`, `processed_reports`
 
 ---
 
@@ -445,6 +460,27 @@ docker logs ollama
 # Restart Ollama
 docker-compose restart ollama
 ```
+
+### n8n can't connect to Ollama
+
+**Error:** "Connection refused" or "ECONNREFUSED" when executing n8n workflows
+
+**This should rarely happen** since the Ollama credential is pre-configured automatically. If you see this error:
+
+**Possible Causes:**
+1. You manually created a new Ollama credential instead of using the pre-configured one
+2. You edited the pre-configured credential and used `localhost:11434`
+
+**Fix:**
+1. In n8n, open your workflow
+2. Click the Ollama node
+3. In "Credential to connect with" dropdown, select **"Ollama Local"** (the pre-configured credential)
+4. If you don't see it, go to **Settings** → **Credentials** → **Ollama API**
+5. The Base URL should be: **`http://ollama:11434`**
+6. If it shows `localhost:11434`, change it to `http://ollama:11434`
+7. Click **Save** and try executing the workflow again
+
+**Why `http://ollama:11434` and not `localhost`?** Inside Docker, `localhost` refers to the n8n container itself, not other containers. Use the service name `ollama` to reach the Ollama container on the shared Docker network.
 
 ### Out of memory
 
