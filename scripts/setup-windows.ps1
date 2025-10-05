@@ -731,10 +731,9 @@ Write-Host "     * n8n:        http://localhost:5678  (Build workflows)" -Foregr
 Write-Host "     * Ollama API: http://localhost:11434 (LLM API endpoint)" -ForegroundColor White
 Write-Host ""
 Write-Host "  [NEXT STEPS]" -ForegroundColor Yellow
-Write-Host "     1. Verify installation: .\scripts\verify-windows.ps1" -ForegroundColor White
-Write-Host "     2. Open OpenWebUI (http://localhost:3000) and create an account" -ForegroundColor White
-Write-Host "     3. Open n8n (http://localhost:5678) and set up credentials" -ForegroundColor White
-Write-Host "     4. Import sample workflows from .\workflows" -ForegroundColor White
+Write-Host "     1. Open OpenWebUI (http://localhost:3000) and create an account" -ForegroundColor White
+Write-Host "     2. Open n8n (http://localhost:5678) and set up credentials" -ForegroundColor White
+Write-Host "     3. Import workflows using n8n's 'Import from File' (see docs\QUICK_START.md)" -ForegroundColor White
 Write-Host ""
 Write-Host "  [DOCUMENTATION]" -ForegroundColor Cyan
 Write-Host "     * Quick Start:     docs\QUICK_START.md" -ForegroundColor White

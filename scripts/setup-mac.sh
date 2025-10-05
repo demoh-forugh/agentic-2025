@@ -596,10 +596,9 @@ fi
 
 echo ""
 echo "[i] Next Steps:"
-echo "   1. Verify installation: ./scripts/verify-mac.sh"
-echo "   2. Open OpenWebUI (http://localhost:3000) and create an account"
-echo "   3. Open N8N (http://localhost:5678) and set up credentials"
-echo "   4. Import sample workflows from ./workflows/"
+echo "   1. Open OpenWebUI (http://localhost:3000) and create an account"
+echo "   2. Open N8N (http://localhost:5678) and set up credentials"
+echo "   3. Import workflows using n8n's 'Import from File' (see docs/QUICK_START.md)"
 echo ""
 echo "[i] Documentation:"
 echo "   • Quick Start:     docs/QUICK_START.md"
