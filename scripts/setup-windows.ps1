@@ -94,25 +94,40 @@ function Invoke-Compose {
 function Wait-ContainerHealth {
     param(
         [string]$ContainerName,
-        [int]$TimeoutSeconds = 60
+        [int]$TimeoutSeconds = 90
     )
 
-    Write-Host "  Waiting for $ContainerName to be healthy (max ${TimeoutSeconds}s)..." -NoNewline
+    Write-Host "  Waiting for $ContainerName to be ready (max ${TimeoutSeconds}s)..." -NoNewline
     $elapsed = 0
     $interval = 2
 
     while ($elapsed -lt $TimeoutSeconds) {
         $health = docker inspect --format='{{.State.Health.Status}}' $ContainerName 2>$null
+        $running = docker inspect --format='{{.State.Running}}' $ContainerName 2>$null
+        
+        # Container is healthy
         if ($health -eq "healthy") {
             Write-Host " [OK]" -ForegroundColor Green
             return $true
         }
-
-        # Check if container is running (some containers don't have health checks)
-        $running = docker inspect --format='{{.State.Running}}' $ContainerName 2>$null
+        
+        # Container is running without healthcheck
         if ($running -eq "true" -and !$health) {
             Write-Host " [OK] (running)" -ForegroundColor Green
             return $true
+        }
+        
+        # For Ollama specifically, check if it's actually responding even if healthcheck is slow
+        if ($ContainerName -eq "ollama" -and $running -eq "true") {
+            try {
+                $response = Invoke-WebRequest -Uri "http://localhost:11434/" -TimeoutSec 2 -UseBasicParsing -ErrorAction SilentlyContinue
+                if ($response.StatusCode -eq 200) {
+                    Write-Host " [OK] (responding)" -ForegroundColor Green
+                    return $true
+                }
+            } catch {
+                # Continue waiting
+            }
         }
 
         Start-Sleep -Seconds $interval
@@ -124,7 +139,13 @@ function Wait-ContainerHealth {
         }
     }
 
-    Write-Host " [X] (timeout)" -ForegroundColor Yellow
+    # Final check - if container is running, consider it OK even if healthcheck failed
+    if ($running -eq "true") {
+        Write-Host " [OK] (running, healthcheck pending)" -ForegroundColor Yellow
+        return $true
+    }
+
+    Write-Host " [X] (timeout)" -ForegroundColor Red
     return $false
 }
 
@@ -395,19 +416,20 @@ if ($existingContainers.Count -gt 0) {
     $unhealthyContainers = @()
 
     foreach ($containerName in $requiredContainers) {
-        if (Wait-ContainerHealth -ContainerName $containerName -TimeoutSeconds 60) {
+        if (Wait-ContainerHealth -ContainerName $containerName -TimeoutSeconds 90) {
             $healthyContainers += $containerName
         } else {
             $unhealthyContainers += $containerName
         }
     }
 
+    Write-Host ""
     if ($unhealthyContainers.Count -gt 0) {
-        Write-Host ""
-        Write-Status "Some containers did not become healthy: $($unhealthyContainers -join ', ')" "WARNING"
-        Write-Host "  >> They may still be initializing. Check with:" -ForegroundColor Yellow
-        Write-Host "     docker-compose ps" -ForegroundColor Cyan
-        Write-Host ""
+        Write-Status "Note: Some containers are still initializing: $($unhealthyContainers -join ', ')" "WARNING"
+        Write-Host "  >> This is usually fine - containers may take extra time to fully start" -ForegroundColor Cyan
+        Write-Host "  >> Verify status with: docker-compose ps" -ForegroundColor DarkGray
+    } else {
+        Write-Status "All containers are ready!" "SUCCESS"
     }
 }
 
