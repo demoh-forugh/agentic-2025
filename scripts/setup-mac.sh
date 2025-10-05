@@ -21,6 +21,74 @@ ok() { printf "\033[1;32m[ok]\033[0m %s\n" "$*"; }
 warn() { printf "\033[1;33m[warn]\033[0m %s\n" "$*"; }
 err() { printf "\033[1;31m[error]\033[0m %s\n" "$*"; }
 
+# Function to detect system specifications
+detect_system_specs() {
+  TOTAL_RAM=0
+  AVAILABLE_RAM=0
+  CPU_CORES=0
+  HAS_GPU=false
+  GPU_NAME="None"
+  RECOMMENDED_MODEL=""
+  RECOMMENDED_CHOICE=1
+
+  # Detect RAM (macOS)
+  if have sysctl; then
+    TOTAL_RAM_BYTES=$(sysctl -n hw.memsize 2>/dev/null || echo "0")
+    if [[ "$TOTAL_RAM_BYTES" -gt 0 ]]; then
+      TOTAL_RAM=$(echo "scale=1; $TOTAL_RAM_BYTES / 1024 / 1024 / 1024" | bc)
+    fi
+
+    # Available RAM (free + inactive)
+    VM_STAT=$(vm_stat 2>/dev/null)
+    if [[ -n "$VM_STAT" ]]; then
+      PAGE_SIZE=$(vm_stat | grep "page size" | awk '{print $8}' || echo "4096")
+      FREE_PAGES=$(echo "$VM_STAT" | grep "Pages free" | awk '{print $3}' | tr -d '.')
+      INACTIVE_PAGES=$(echo "$VM_STAT" | grep "Pages inactive" | awk '{print $3}' | tr -d '.')
+      AVAILABLE_RAM=$(echo "scale=1; ($FREE_PAGES + $INACTIVE_PAGES) * $PAGE_SIZE / 1024 / 1024 / 1024" | bc)
+    fi
+  fi
+
+  # Detect CPU cores
+  if have sysctl; then
+    CPU_CORES=$(sysctl -n hw.ncpu 2>/dev/null || echo "0")
+  fi
+
+  # Detect GPU (macOS - Apple Silicon or NVIDIA)
+  if have system_profiler; then
+    GPU_INFO=$(system_profiler SPDisplaysDataType 2>/dev/null | grep "Chipset Model" | head -1 | awk -F': ' '{print $2}')
+    if [[ -n "$GPU_INFO" ]]; then
+      GPU_NAME="$GPU_INFO"
+      # Check if it's Apple Silicon GPU or dedicated NVIDIA
+      if [[ "$GPU_INFO" =~ "Apple" ]] || [[ "$GPU_INFO" =~ "NVIDIA" ]] || [[ "$GPU_INFO" =~ "AMD" ]]; then
+        HAS_GPU=true
+      fi
+    fi
+  fi
+
+  # Recommend model based on specs
+  if [[ $(echo "$TOTAL_RAM < 6" | bc -l) -eq 1 ]]; then
+    RECOMMENDED_MODEL="llama3.2:1b"
+    RECOMMENDED_CHOICE=1
+  elif [[ $(echo "$TOTAL_RAM < 10" | bc -l) -eq 1 ]]; then
+    if [[ "$HAS_GPU" == true ]]; then
+      RECOMMENDED_MODEL="llama3.2:1b or llama3.2"
+      RECOMMENDED_CHOICE=2
+    else
+      RECOMMENDED_MODEL="llama3.2:1b"
+      RECOMMENDED_CHOICE=1
+    fi
+  else
+    # 10GB+ RAM
+    if [[ "$HAS_GPU" == true ]]; then
+      RECOMMENDED_MODEL="llama3.2 or mistral"
+      RECOMMENDED_CHOICE=2
+    else
+      RECOMMENDED_MODEL="llama3.2"
+      RECOMMENDED_CHOICE=2
+    fi
+  fi
+}
+
 echo "======================================================="
 echo "   n8n Workshop - Automated Setup Script v1.1.1"
 echo "   Go to Agentic Conference 2025"
@@ -86,6 +154,36 @@ ROOT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")"/.. && pwd)"
 cd "$ROOT_DIR"
 
 info "Working directory: $ROOT_DIR"
+echo ""
+echo "======================================================="
+echo ""
+
+# Detect system specifications
+info "Detecting system specifications..."
+detect_system_specs
+
+echo ""
+echo "  System Specifications:"
+if [[ $(echo "$TOTAL_RAM > 0" | bc -l) -eq 1 ]]; then
+  echo "    RAM:       ${TOTAL_RAM} GB total$(if [[ $(echo "$AVAILABLE_RAM > 0" | bc -l) -eq 1 ]]; then echo ", ${AVAILABLE_RAM} GB available"; fi)"
+else
+  echo "    RAM:       Unable to detect"
+fi
+
+if [[ $CPU_CORES -gt 0 ]]; then
+  echo "    CPU:       $CPU_CORES cores"
+else
+  echo "    CPU:       Unable to detect"
+fi
+
+if [[ "$HAS_GPU" == true ]]; then
+  echo "    GPU:       $GPU_NAME"
+else
+  echo "    GPU:       None detected (CPU-only mode)"
+fi
+
+echo ""
+echo "  Recommended Model: $RECOMMENDED_MODEL"
 echo ""
 echo "======================================================="
 echo ""
@@ -342,13 +440,38 @@ if [[ ${#OLLAMA_CMD[@]} -gt 0 ]]; then
       fi
       
       echo "  >> Select a model to download:"
-      echo "     1. llama3.2:1b  (1GB)  - Fast, recommended for testing"
-      echo "     2. llama3.2     (4GB)  - Balanced, recommended for workshop"
-      echo "     3. mistral      (4GB)  - Good for coding tasks"
+      echo "     Based on your system (${TOTAL_RAM}GB RAM, $CPU_CORES cores$(if [[ "$HAS_GPU" == true ]]; then echo ", GPU"; fi)):"
+      echo ""
+
+      # Highlight recommended model
+      if [[ $RECOMMENDED_CHOICE -eq 1 ]]; then
+        echo "     1. llama3.2:1b  (1GB)  - Fast, works on any system [RECOMMENDED]"
+        echo "     2. llama3.2     (4GB)  - Balanced, recommended for workshop"
+        echo "     3. mistral      (4GB)  - Good for coding tasks"
+      elif [[ $RECOMMENDED_CHOICE -eq 2 ]]; then
+        echo "     1. llama3.2:1b  (1GB)  - Fast, works on any system"
+        echo "     2. llama3.2     (4GB)  - Balanced, recommended for workshop [RECOMMENDED]"
+        echo "     3. mistral      (4GB)  - Good for coding tasks"
+      elif [[ $RECOMMENDED_CHOICE -eq 3 ]]; then
+        echo "     1. llama3.2:1b  (1GB)  - Fast, works on any system"
+        echo "     2. llama3.2     (4GB)  - Balanced, recommended for workshop"
+        echo "     3. mistral      (4GB)  - Good for coding tasks [RECOMMENDED]"
+      else
+        echo "     1. llama3.2:1b  (1GB)  - Fast, works on any system"
+        echo "     2. llama3.2     (4GB)  - Balanced, recommended for workshop"
+        echo "     3. mistral      (4GB)  - Good for coding tasks"
+      fi
+
       echo "     4. All models   (9GB)  - Download all three ([!] takes longest, 15-30 min)"
       echo "     5. Skip for now"
       echo ""
-      read -p "Enter choice (1-5): " model_choice
+      read -p "Enter choice (1-5) [default: $RECOMMENDED_CHOICE]: " model_choice
+
+      # Use recommended model if user just presses Enter
+      if [[ -z "$model_choice" ]]; then
+        model_choice=$RECOMMENDED_CHOICE
+        echo "  Using recommended choice: $model_choice"
+      fi
       
       case "$model_choice" in
         1) MODELS_TO_PULL=("llama3.2:1b") ;;

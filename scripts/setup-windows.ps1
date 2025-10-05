@@ -90,6 +90,88 @@ function Invoke-Compose {
     }
 }
 
+# Function to detect system specifications
+function Get-SystemSpecs {
+    $specs = @{
+        TotalRAM = 0
+        AvailableRAM = 0
+        CPUCores = 0
+        HasGPU = $false
+        GPUName = ""
+        RecommendedModel = ""
+        RecommendedChoice = 1
+    }
+
+    # Detect RAM (in GB)
+    try {
+        $os = Get-CimInstance -ClassName Win32_OperatingSystem -ErrorAction SilentlyContinue
+        if ($os) {
+            $specs.TotalRAM = [math]::Round($os.TotalVisibleMemorySize / 1MB, 1)
+            $specs.AvailableRAM = [math]::Round($os.FreePhysicalMemory / 1MB, 1)
+        }
+    } catch {
+        # Fallback: try WMI
+        try {
+            $cs = Get-WmiObject -Class Win32_ComputerSystem -ErrorAction SilentlyContinue
+            if ($cs) {
+                $specs.TotalRAM = [math]::Round($cs.TotalPhysicalMemory / 1GB, 1)
+            }
+        } catch {
+            # Could not detect RAM
+        }
+    }
+
+    # Detect CPU cores
+    try {
+        $cpu = Get-CimInstance -ClassName Win32_Processor -ErrorAction SilentlyContinue
+        if ($cpu) {
+            $specs.CPUCores = $cpu.NumberOfLogicalProcessors
+        }
+    } catch {
+        # Fallback
+        $specs.CPUCores = $env:NUMBER_OF_PROCESSORS
+    }
+
+    # Detect GPU
+    try {
+        $nvsmi = Get-Command nvidia-smi -ErrorAction SilentlyContinue
+        if ($nvsmi) {
+            $gpuOutput = & nvidia-smi --query-gpu=name --format=csv,noheader 2>$null
+            if ($LASTEXITCODE -eq 0 -and $gpuOutput) {
+                $specs.HasGPU = $true
+                $specs.GPUName = $gpuOutput.Trim()
+            }
+        }
+    } catch {
+        # No GPU detected
+    }
+
+    # Recommend model based on specs
+    if ($specs.TotalRAM -lt 6) {
+        $specs.RecommendedModel = "llama3.2:1b"
+        $specs.RecommendedChoice = 1
+    } elseif ($specs.TotalRAM -lt 10) {
+        if ($specs.HasGPU) {
+            $specs.RecommendedModel = "llama3.2:1b or llama3.2"
+            $specs.RecommendedChoice = 2
+        } else {
+            $specs.RecommendedModel = "llama3.2:1b"
+            $specs.RecommendedChoice = 1
+        }
+    } else {
+        # 10GB+ RAM
+        if ($specs.HasGPU) {
+            $specs.RecommendedModel = "llama3.2 or mistral"
+            $specs.RecommendedChoice = 2
+        } else {
+            $specs.RecommendedModel = "llama3.2"
+            $specs.RecommendedChoice = 2
+        }
+    }
+
+    return $specs
+}
+
 # Function to wait for container health
 function Wait-ContainerHealth {
     param(
@@ -245,6 +327,36 @@ if (Test-CommandExists docker-compose) {
     exit 1
 }
 
+Write-Host ""
+Write-Host "---------------------------------------------------------" -ForegroundColor DarkGray
+Write-Host ""
+
+# Detect system specifications
+Write-Status "Detecting system specifications..." "INFO"
+$systemSpecs = Get-SystemSpecs
+
+Write-Host ""
+Write-Host "  System Specifications:" -ForegroundColor Cyan
+if ($systemSpecs.TotalRAM -gt 0) {
+    Write-Host "    RAM:       $($systemSpecs.TotalRAM) GB total, $($systemSpecs.AvailableRAM) GB available" -ForegroundColor White
+} else {
+    Write-Host "    RAM:       Unable to detect" -ForegroundColor DarkGray
+}
+
+if ($systemSpecs.CPUCores -gt 0) {
+    Write-Host "    CPU:       $($systemSpecs.CPUCores) cores" -ForegroundColor White
+} else {
+    Write-Host "    CPU:       Unable to detect" -ForegroundColor DarkGray
+}
+
+if ($systemSpecs.HasGPU) {
+    Write-Host "    GPU:       $($systemSpecs.GPUName)" -ForegroundColor Green
+} else {
+    Write-Host "    GPU:       None detected (CPU-only mode)" -ForegroundColor DarkGray
+}
+
+Write-Host ""
+Write-Host "  Recommended Model: $($systemSpecs.RecommendedModel)" -ForegroundColor Yellow
 Write-Host ""
 Write-Host "---------------------------------------------------------" -ForegroundColor DarkGray
 Write-Host ""
@@ -467,14 +579,32 @@ if ($downloadModel -eq "" -or $downloadModel -eq "Y" -or $downloadModel -eq "y")
     }
 
     Write-Host "  >> Select a model to download:" -ForegroundColor Yellow
-    Write-Host "     1. llama3.2:1b  (1GB)  - Fast, recommended for testing" -ForegroundColor White
-    Write-Host "     2. llama3.2     (4GB)  - Balanced, recommended for workshop" -ForegroundColor White
-    Write-Host "     3. mistral      (4GB)  - Good for coding tasks" -ForegroundColor White
+    Write-Host "     Based on your system ($($systemSpecs.TotalRAM)GB RAM, $($systemSpecs.CPUCores) cores$(if($systemSpecs.HasGPU){', GPU'})):" -ForegroundColor Cyan
+    Write-Host ""
+
+    # Highlight recommended model
+    $color1 = if ($systemSpecs.RecommendedChoice -eq 1) { "Green" } else { "White" }
+    $color2 = if ($systemSpecs.RecommendedChoice -eq 2) { "Green" } else { "White" }
+    $color3 = if ($systemSpecs.RecommendedChoice -eq 3) { "Green" } else { "White" }
+
+    $marker1 = if ($systemSpecs.RecommendedChoice -eq 1) { " [RECOMMENDED]" } else { "" }
+    $marker2 = if ($systemSpecs.RecommendedChoice -eq 2) { " [RECOMMENDED]" } else { "" }
+    $marker3 = if ($systemSpecs.RecommendedChoice -eq 3) { " [RECOMMENDED]" } else { "" }
+
+    Write-Host "     1. llama3.2:1b  (1GB)  - Fast, works on any system$marker1" -ForegroundColor $color1
+    Write-Host "     2. llama3.2     (4GB)  - Balanced, recommended for workshop$marker2" -ForegroundColor $color2
+    Write-Host "     3. mistral      (4GB)  - Good for coding tasks$marker3" -ForegroundColor $color3
     Write-Host "     4. All models   (9GB)  - Download all three ([!] takes longest, 15-30 min)" -ForegroundColor Cyan
     Write-Host "     5. Skip for now" -ForegroundColor DarkGray
     Write-Host ""
 
-    $modelChoice = Read-Host "Enter choice (1-5)"
+    $modelChoice = Read-Host "Enter choice (1-5) [default: $($systemSpecs.RecommendedChoice)]"
+
+    # Use recommended model if user just presses Enter
+    if ([string]::IsNullOrWhiteSpace($modelChoice)) {
+        $modelChoice = $systemSpecs.RecommendedChoice
+        Write-Host "  Using recommended choice: $modelChoice" -ForegroundColor Cyan
+    }
 
     $models = switch ($modelChoice) {
         "1" { @("llama3.2:1b") }

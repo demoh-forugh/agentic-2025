@@ -15,29 +15,152 @@ This guide walks you through installing all required components for the workshop
 - **GPU**: Optional (NVIDIA GPU for faster inference)
 - **Internet**: Required for initial setup and model downloads
 
+### 🎯 Smart Model Recommendations
+
+**The setup script automatically detects your system specifications** (RAM, CPU, GPU) and recommends the optimal model:
+
+| Your System | Recommended Model | Size | Reason |
+|------------|-------------------|------|---------|
+| < 6GB RAM | `llama3.2:1b` | 1GB | Limited memory - small model only |
+| 6-10GB RAM (no GPU) | `llama3.2:1b` | 1GB | Moderate RAM - CPU inference |
+| 6-10GB RAM (with GPU) | `llama3.2:1b` or `llama3.2` | 1-4GB | GPU accelerates larger models |
+| 10GB+ RAM (no GPU) | `llama3.2` | 4GB | Good RAM for mid-size model |
+| 10GB+ RAM (with GPU) | `llama3.2` or `mistral` | 4GB | Optimal for workshop ✅ |
+
+**During setup, you'll see:**
+```
+System Specifications:
+  RAM:       16.0 GB total, 12.3 GB available
+  CPU:       8 cores
+  GPU:       NVIDIA GeForce RTX 3060
+
+Recommended Model: llama3.2 or mistral
+```
+
+The setup script will highlight the recommended model in green and set it as the default choice.
+
 ---
 
-## Step## 10) Install n8nDocker Desktop
+## Windows Installation
 
-### Download and Install
+### Step 1: Install Docker Desktop
 
 1. Visit [Docker Desktop for Windows](https://www.docker.com/products/docker-desktop/)
-2. Download the installer
-{{ ... }}
+2. Download the installer for Windows
+3. Run the installer and follow the prompts
+4. **Enable WSL2** when prompted (required for Docker)
+5. Restart your computer after installation
+6. **Launch Docker Desktop** from the Start Menu
+7. **Log in or skip login** when prompted
+8. Wait for Docker to fully start (whale icon in system tray shows "Engine running")
+
+### Step 2: Run Automated Setup
+
+Open PowerShell in your repository directory and run:
+
+```powershell
+# Run the automated setup script
+.\scripts\setup-windows.ps1
+
+# Optional: Enable detailed logging
+$env:ENABLE_LOGGING="1"
+.\scripts\setup-windows.ps1
+```
+
+**The setup script will:**
+- ✓ Detect your system specs (RAM, CPU, GPU)
+- ✓ Recommend the optimal model for your hardware
+- ✓ Check Docker is running
+- ✓ Start all containers (ollama, n8n, open-webui, postgres)
+- ✓ Wait for containers to be healthy
+- ✓ Optionally download a model
+- ✓ Provide troubleshooting if anything fails
+
+### Step 3: Verify Installation
+
+```powershell
 .\scripts\verify-windows.ps1
 ```
 
+This checks that all services are running and accessible.
+
 ---
 
-## 2) Install n8n in Complete!
+## Installation Complete! 🎉
 
 You now have a complete local AI agent stack running!
 
+### Post-Install: First Steps
+
+#### 1. Test OpenWebUI (2 minutes)
+
+Verify your LLM is working:
+
+1. Open http://localhost:3000
+2. Create a local account (any email, e.g., `user@example.com`)
+3. Select your model from the dropdown (e.g., `llama3.2` or `llama3.2:1b`)
+4. Type: "What is AI automation?"
+5. See your LLM respond! ✅
+
+**Tip:** If your model isn't in the dropdown, check if it's still downloading:
+```bash
+docker exec -it ollama ollama list
+```
+
+#### 2. Set Up n8n (3 minutes)
+
+Create your workflow automation account:
+
+1. Open http://localhost:5678
+2. Create your n8n account (stored locally)
+3. Enter email and password
+4. Click "Get started"
+5. You'll see the workflow canvas ✅
+
+#### 3. Import Your First Workflow (5 minutes)
+
+Test Ollama integration with the Hello World workflow using n8n's built-in import feature:
+
+1. In n8n, click the **"..."** menu button (top right corner) → **"Import from File"**
+2. In the file browser, navigate to where you cloned this repository
+3. Browse to the `workflows/` folder
+4. Select **`01-hello-world.json`** and click **Open**
+5. The workflow will load on the canvas
+6. Configure the Ollama credential (first time only):
+   - Click the **"AI Model"** node (Ollama node)
+   - Click **"Add credential"**
+   - Enter URL: `http://ollama:11434`
+   - Click **"Save"**
+7. Click **"Execute Workflow"** button in the top toolbar
+8. View the output in the **"Format Response"** node - see AI output! 🎉
+
+**Example path to workflows:**
+- Windows: `C:\Users\YourName\Documents\demos\workflows\01-hello-world.json`
+- macOS: `/Users/YourName/Documents/demos/workflows/01-hello-world.json`
+- Linux: `/home/username/demos/workflows/01-hello-world.json`
+
+#### 4. Explore More Workflows
+
+We've included **6 production-ready workflows** for real business use cases:
+
+| Workflow | Description | Setup Time |
+|----------|-------------|------------|
+| `01-hello-world.json` | Test Ollama integration | 2 min |
+| `02-gmail-agent.json` | Email triage & auto-categorization | 15 min* |
+| `03-calendar-assistant.json` | Smart meeting scheduling | 15 min* |
+| `04-document-processor.json` | Auto-generate reports from data | 15 min* |
+| `05-customer-service-db.json` | Database-powered customer support | 5 min |
+| `06-lead-scoring-crm.json` | AI lead qualification & scoring | 5 min |
+
+*Requires Google API credentials - see [CONFIGURATION.md](./CONFIGURATION.md)
+
+**📚 Full Workflow Documentation:** [workflows/README.md](../workflows/README.md)
+
 ### Next Steps
 
-{{ ... }}
-2. **[Sample Workflows](../workflows/)** - Import pre-built workflows into n8n
-3. **Test Your Setup** - Try the hello-world workflow
+1. **[Configure Google APIs](./CONFIGURATION.md)** - Enable Gmail, Calendar, Docs, Sheets workflows (15 min)
+2. **[Import Sample Workflows](../workflows/README.md)** - Try all 6 pre-built workflows
+3. **[Build Your Own](https://docs.n8n.io/)** - Create custom AI automation workflows
 
 ---
 
@@ -72,9 +195,14 @@ This section covers installing and running the workshop stack on macOS using Doc
 # 1) Make scripts executable (first time only)
 chmod +x ./scripts/setup-mac.sh \
          ./scripts/verify-mac.sh \
-         ./scripts/measure-cold-warm.sh
+         ./scripts/measure-cold-warm-mac.sh
 
 # 2) Setup: start Docker services and prepare environment
+#    The script will:
+#    - Detect your system specs (RAM, CPU, GPU)
+#    - Recommend the optimal model for your hardware
+#    - Start all containers with health checks
+#    - Optionally download a model
 ./scripts/setup-mac.sh
 
 # 3) Verify: check services are reachable

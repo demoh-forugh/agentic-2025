@@ -27,15 +27,16 @@ Get up and running in 15 minutes! ⚡
 ```powershell
 # If you have git
 git clone <workshop-repo-url>
-cd demos
+cd open-source-setup
 
 # Or download and extract ZIP file
 ```
 
 ### 2. Run Setup Script
 
+#### Windows
 ```powershell
-# Windows: Run automated setup
+# Run automated setup
 .\scripts\setup-windows.ps1
 
 # Optional: Enable detailed logging
@@ -43,22 +44,29 @@ $env:ENABLE_LOGGING="1"
 .\scripts\setup-windows.ps1
 ```
 
+#### macOS
 ```bash
-# macOS: Run automated setup
+# Run automated setup
 ./scripts/setup-mac.sh
 
 # Optional: Enable detailed logging
+ENABLE_LOGGING=1 ./scripts/setup-mac.sh
 ENABLE_LOGGING=1 ./scripts/setup-mac.sh
 ```
 
 **What the setup script does:**
 - ✓ Check prerequisites (Docker, disk space, network)
+- ✓ **Detect system specs** (RAM, CPU cores, GPU) and recommend optimal model
 - ✓ Detect already-running containers (won't restart unnecessarily)
 - ✓ Start Docker containers with health checks
 - ✓ Download an LLM model (optional, skips if already present)
 - ✓ Provide detailed troubleshooting if anything fails
 
 **Key Features:**
+- **Smart Model Recommendations**: Analyzes your RAM, CPU, and GPU to suggest the right model
+  - <6GB RAM → `llama3.2:1b` (1GB model)
+  - 6-10GB RAM → `llama3.2:1b` or `llama3.2` (depending on GPU)
+  - 10GB+ RAM → `llama3.2` or `mistral` (optimal for workshop)
 - **Idempotency**: If containers are already running, prompts before restarting
 - **Health Checks**: Waits up to 60s for each container to be healthy
 - **Pre-flight Validation**: Checks Docker daemon, disk space, and network before starting
@@ -66,13 +74,13 @@ ENABLE_LOGGING=1 ./scripts/setup-mac.sh
 
 ### 3. Verify Installation
 
+#### Windows
 ```powershell
-# Windows
 .\scripts\verify-windows.ps1
 ```
 
+#### macOS
 ```bash
-# macOS
 ./scripts/verify-mac.sh
 ```
 
@@ -85,20 +93,36 @@ ENABLE_LOGGING=1 ./scripts/setup-mac.sh
 - ✓ Container resource usage
 
 **Troubleshooting Improvements:**
-- **Prioritized Troubleshooting**: Errors shown in fix-order (Docker → Containers → Ports → Endpoints)
 - **Container Status Differentiation**: Distinguishes between stopped vs missing containers
 - **Smart Model Guidance**: Suggests specific models based on your RAM
 
 ---
 
-## Manual Setup (Alternative)
+### 4. Manual Setup (Alternative)
 
 If you prefer manual control:
 
+#### Windows
 ```powershell
 # 1. Copy configuration
 copy configs\docker-compose.yml .
 copy configs\.env.example .env
+
+# 2. Start services
+docker-compose up -d
+
+# 3. Download a model
+docker exec -it ollama ollama pull llama3.2
+
+# 4. Check status
+docker-compose ps
+```
+
+#### macOS/Linux
+```bash
+# 1. Copy configuration
+cp configs/docker-compose.yml .
+cp configs/.env.example .env
 
 # 2. Start services
 docker-compose up -d
@@ -150,28 +174,74 @@ Once running, open these in your browser:
 
 ---
 
-## First Steps
+## Post-Install: First Steps
 
 ### 1. Set Up OpenWebUI (2 minutes)
 
+**Test your LLM is working:**
+
 1. Go to http://localhost:3000
-2. Click "Sign Up" (stored locally)
-3. Create an account with any email
-4. Select your model from dropdown (e.g., `llama3.2`)
-5. Start chatting!
+2. Click "**Sign Up**" (data stored locally, no external account needed)
+3. Create an account with any email (e.g., `user@example.com`)
+4. Select your model from dropdown (e.g., `llama3.2` or `llama3.2:1b`)
+5. Type a test message: "What is AI automation?"
+6. See your LLM respond! ✅
+
+**Tip:** If you don't see your model in the dropdown, it may still be downloading. Check the setup script output or run:
+```bash
+docker exec -it ollama ollama list
+```
 
 ### 2. Set Up n8n (3 minutes)
 
+**Create your workflow automation account:**
+
 1. Go to http://localhost:5678
-2. Create your account (first-time setup)
-3. You'll see the workflow canvas
+2. Create your n8n account (first-time setup, local only)
+3. Enter your email and password
+4. Click "**Get started**"
+5. You'll see the workflow canvas - you're ready to build! ✅
 
 ### 3. Import Your First Workflow (5 minutes)
 
-1. In n8n, click "**...**" menu (top right) → "**Import from File**"
-2. Select `workflows/01-hello-world.json`
-3. Click "**Execute Workflow**"
-4. See your LLM respond! 🎉
+**Try the Hello World workflow to test Ollama integration using n8n's built-in import:**
+
+1. In n8n, click the **"..."** menu button (top right corner) → **"Import from File"**
+2. In the file browser, navigate to where you cloned this repository
+3. Browse to the **`workflows/`** folder inside your repository
+4. Select **`01-hello-world.json`** and click **Open**
+5. The workflow will appear on the canvas
+6. Configure the Ollama credential (first time only):
+   - Click the **"AI Model"** node (Ollama node)
+   - Click **"Add credential"**
+   - Enter URL: `http://ollama:11434`
+   - Click **"Save"**
+7. Click **"Execute Workflow"** button in the top toolbar
+8. View the output in the **"Format Response"** node - see your LLM respond! 🎉
+
+**Example paths to find your workflows:**
+- **Windows**: `C:\Users\YourName\Documents\demos\workflows\01-hello-world.json`
+- **macOS**: `/Users/YourName/Documents/demos/workflows/01-hello-world.json`
+- **Linux**: `/home/username/demos/workflows/01-hello-world.json`
+
+**Success!** Your local AI agent stack is working. ✅
+
+### 4. Import More Workflows (Optional)
+
+We've included **6 production-ready workflows** for common business use cases:
+
+| Workflow | Use Case | Setup Time |
+|----------|----------|------------|
+| `01-hello-world.json` | Test Ollama integration | 2 min |
+| `02-gmail-agent.json` | Email triage & categorization | 15 min* |
+| `03-calendar-assistant.json` | Smart meeting scheduling | 15 min* |
+| `04-document-processor.json` | Auto-generate reports | 15 min* |
+| `05-customer-service-db.json` | Database-powered support | 5 min |
+| `06-lead-scoring-crm.json` | AI lead qualification | 5 min |
+
+*Requires Google API credentials (see [CONFIGURATION.md](./CONFIGURATION.md))
+
+**📚 Full Workflow Documentation:** See [workflows/README.md](../workflows/README.md) for detailed setup instructions, business value, and examples for each workflow.
 
 ---
 
@@ -179,7 +249,27 @@ Once running, open these in your browser:
 
 ### Manage Services
 
+#### Windows
 ```powershell
+# Start everything
+docker-compose up -d
+
+# Stop everything
+docker-compose down
+
+# Restart a service
+docker-compose restart ollama
+
+# View logs
+docker-compose logs -f
+docker-compose logs ollama --tail=50
+
+# Check status
+docker-compose ps
+```
+
+#### macOS/Linux
+```bash
 # Start everything
 docker-compose up -d
 
@@ -199,7 +289,23 @@ docker-compose ps
 
 ### Manage Ollama Models
 
+#### Windows
 ```powershell
+# List downloaded models
+docker exec -it ollama ollama list
+
+# Download a new model
+docker exec -it ollama ollama pull mistral
+
+# Remove a model
+docker exec -it ollama ollama rm llama3.2
+
+# Run model directly (test)
+docker exec -it ollama ollama run llama3.2 "Hello!"
+```
+
+#### macOS/Linux
+```bash
 # List downloaded models
 docker exec -it ollama ollama list
 
@@ -215,7 +321,21 @@ docker exec -it ollama ollama run llama3.2 "Hello!"
 
 ### Manage Containers
 
+#### Windows
 ```powershell
+# Get container shell
+docker exec -it n8n sh
+docker exec -it ollama bash
+
+# View resource usage
+docker stats
+
+# Clean up unused resources
+docker system prune
+```
+
+#### macOS/Linux
+```bash
 # Get container shell
 docker exec -it n8n sh
 docker exec -it ollama bash
@@ -268,7 +388,21 @@ See [workflows/README.md](../workflows/README.md) for details.
 
 ### Services won't start
 
+#### Windows
 ```powershell
+# Check Docker is running
+docker ps
+
+# View error logs
+docker-compose logs
+
+# Restart everything
+docker-compose down
+docker-compose up -d
+```
+
+#### macOS/Linux
+```bash
 # Check Docker is running
 docker ps
 
@@ -288,9 +422,22 @@ docker-compose up -d
 
 ### Ollama errors
 
+#### Windows
 ```powershell
 # Check Ollama is running
 docker ps | findstr ollama
+
+# Check logs
+docker logs ollama
+
+# Restart Ollama
+docker-compose restart ollama
+```
+
+#### macOS/Linux
+```bash
+# Check Ollama is running
+docker ps | grep ollama
 
 # Check logs
 docker logs ollama
@@ -414,7 +561,7 @@ docker exec -it n8n sh
 1. **Check troubleshooting guide**: [TROUBLESHOOTING.md](./TROUBLESHOOTING.md)
 2. **Run verification script**:
    - Windows: `.\scripts\verify-windows.ps1`
-   - macOS: `./scripts/verify-mac.sh`
+   - macOS/Linux: `./scripts/verify-mac.sh`
 3. **Check logs**: `docker-compose logs -f`
 4. **Ask for help**: Workshop Discord or email
 5. **Search community**: [community.n8n.io](https://community.n8n.io/)
