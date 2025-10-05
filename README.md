@@ -1,4 +1,4 @@
-# Building Agents with N8N - Workshop Materials
+# Building Agents with n8n - Workshop Materials
 ## Go to Agentic Conference 2025
 
 **Date:** Monday, October 27, 2025 | 1:00 PM - 2:00 PM (US/Eastern)  
@@ -100,7 +100,9 @@ demos/
 │   ├── 01-hello-world.json           # Basic n8n work flow
 │   ├── 02-gmail-agent.json           # Email processing agent
 │   ├── 03-calendar-assistant.json    # Calendar management
-│   └── 04-document-processor.json    # Google Docs automation
+│   ├── 04-document-processor.json    # Google Docs automation
+│   ├── 05-customer-service-db.json   # Customer service with PostgreSQL
+│   └── 06-lead-scoring-crm.json      # AI lead scoring & CRM
 ├── configs/
 │   ├── docker-compose.yml            # Docker stack definition
 │   ├── docker-compose.gpu.yml        # GPU override (Windows)
@@ -135,7 +137,8 @@ For detailed agenda and learning objectives, see [Workshop Goals](./docs/GOALS.m
 - **Email Triage Agent**: Automatically categorize and summarize incoming emails
 - **Meeting Scheduler**: AI-powered calendar management with conflict resolution
 - **Document Generator**: Create reports from structured data sources
-- **Data Pipeline**: Extract insights from sheets and create automated reports
+- **Customer Service Automation**: AI ticket analysis with PostgreSQL database integration
+- **Lead Scoring & CRM**: Intelligent lead qualification with automatic sales team alerts
 - **Custom Chatbot**: Build domain-specific assistants with RAG (Retrieval Augmented Generation)
 
 ---
