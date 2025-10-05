@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    N8N Workshop - Cold vs Warm Start Performance Measurement
+    n8n Workshop - Cold vs Warm Start Performance Measurement
 
 .DESCRIPTION
     Measures LLM performance comparing cold start (model loading) vs warm start (model cached).
@@ -33,7 +33,7 @@
     Requires: Docker with Ollama container running
 #>
 
-# N8N Workshop - Cold vs Warm Start Performance Measurement
+# n8n Workshop - Cold vs Warm Start Performance Measurement
 # Version: 1.1.1
 # Last Updated: 2025-10-05
 # Workshop: Go to Agentic Conference 2025

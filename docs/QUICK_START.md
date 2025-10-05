@@ -237,7 +237,7 @@ To use Gmail, Calendar, Docs, and Sheets:
 2. Set up Google Cloud project
 3. Enable APIs
 4. Create OAuth credentials
-5. Configure in N8N
+5. Configure in n8n
 
 {{ ... }}
 

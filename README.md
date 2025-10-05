@@ -36,7 +36,7 @@ For detailed value proposition and cost analysis, see [Workshop Goals](./docs/GO
 | **Docker** | Container platform for easy deployment |
 | **Ollama** | Local LLM runtime (run models like Llama, Mistral, etc.) |
 | **OpenWebUI** | Beautiful chat interface for LLMs |
-| **N8N** | Visual workflow automation and agent orchestration |
+| **n8n** | Visual workflow automation and agent orchestration |
 
 ---
 

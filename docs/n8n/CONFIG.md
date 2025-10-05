@@ -1,6 +1,6 @@
-# N8N Configuration Reference
+# n8n Configuration Reference
 
-This document contains N8N environment variable configurations extracted from official documentation for development reference.
+This document contains n8n environment variable configurations extracted from official documentation for development reference.
 
 ---
 
@@ -26,7 +26,7 @@ export GENERIC_TIMEZONE=Europe/Berlin
 
 **Source**: https://docs.n8n.io/hosting/scaling/execution-data/
 
-Depending on your execution settings and volume, your n8n database can grow in size and run out of storage. N8N recommends not saving unnecessary data and enabling pruning of old execution data.
+Depending on your execution settings and volume, your n8n database can grow in size and run out of storage. n8n recommends not saving unnecessary data and enabling pruning of old execution data.
 
 ### Reduce Saved Data
 

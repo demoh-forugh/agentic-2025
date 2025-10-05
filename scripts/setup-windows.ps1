@@ -1,9 +1,9 @@
 <#
 .SYNOPSIS
-    N8N Workshop - Automated Setup Script
+    n8n Workshop - Automated Setup Script
 
 .DESCRIPTION
-    Automated setup for N8N workshop Docker stack including Ollama, OpenWebUI, N8N, and PostgreSQL.
+    Automated setup for n8n workshop Docker stack including Ollama, OpenWebUI, n8n, and PostgreSQL.
     Includes idempotency checks, health validation, and comprehensive error handling.
 
 .PARAMETER WhatIf
@@ -25,7 +25,7 @@
     Requires: Docker Desktop for Windows, WSL2
 #>
 
-# N8N Workshop - Automated Setup Script
+# n8n Workshop - Automated Setup Script
 # Version: 1.1.1
 # Last Updated: 2025-10-05
 # Workshop: Go to Agentic Conference 2025
@@ -40,7 +40,7 @@ if ($env:ENABLE_LOGGING -eq "1") {
 
 Write-Host ""
 Write-Host "=========================================================" -ForegroundColor Cyan
-Write-Host "   N8N Workshop - Automated Setup Script v1.1.1" -ForegroundColor White
+Write-Host "   n8n Workshop - Automated Setup Script v1.1.1" -ForegroundColor White
 Write-Host "   Go to Agentic Conference 2025" -ForegroundColor Yellow
 Write-Host "=========================================================" -ForegroundColor Cyan
 Write-Host ""
@@ -495,13 +495,13 @@ if ($modelCount -gt 0) {
 Write-Host ""
 Write-Host "  [ACCESS YOUR SERVICES]" -ForegroundColor Cyan
 Write-Host "     * OpenWebUI:  http://localhost:3000  (Chat with LLMs)" -ForegroundColor White
-Write-Host "     * N8N:        http://localhost:5678  (Build workflows)" -ForegroundColor White
+Write-Host "     * n8n:        http://localhost:5678  (Build workflows)" -ForegroundColor White
 Write-Host "     * Ollama API: http://localhost:11434 (LLM API endpoint)" -ForegroundColor White
 Write-Host ""
 Write-Host "  [NEXT STEPS]" -ForegroundColor Yellow
 Write-Host "     1. Verify installation: .\scripts\verify-windows.ps1" -ForegroundColor White
 Write-Host "     2. Open OpenWebUI (http://localhost:3000) and create an account" -ForegroundColor White
-Write-Host "     3. Open N8N (http://localhost:5678) and set up credentials" -ForegroundColor White
+Write-Host "     3. Open n8n (http://localhost:5678) and set up credentials" -ForegroundColor White
 Write-Host "     4. Import sample workflows from .\workflows\" -ForegroundColor White
 Write-Host ""
 Write-Host "  [DOCUMENTATION]" -ForegroundColor Cyan

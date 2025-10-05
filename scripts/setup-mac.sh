@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# N8N Workshop - Automated Setup Script (macOS)
+# n8n Workshop - Automated Setup Script (macOS)
 # Version: 1.1.1
 # Last Updated: 2025-10-05
 # Workshop: Go to Agentic Conference 2025
@@ -22,7 +22,7 @@ warn() { printf "\033[1;33m[warn]\033[0m %s\n" "$*"; }
 err() { printf "\033[1;31m[error]\033[0m %s\n" "$*"; }
 
 echo "═══════════════════════════════════════════════════════"
-echo "   N8N Workshop - Automated Setup Script v1.1.1"
+echo "   n8n Workshop - Automated Setup Script v1.1.1"
 echo "   Go to Agentic Conference 2025"
 echo "═══════════════════════════════════════════════════════"
 echo ""

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# N8N Workshop - Cold vs Warm Start Performance Measurement (macOS)
+# n8n Workshop - Cold vs Warm Start Performance Measurement (macOS)
 # Version: 1.1.1
 # Last Updated: 2025-10-05
 # Workshop: Go to Agentic Conference 2025

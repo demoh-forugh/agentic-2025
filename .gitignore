@@ -95,14 +95,14 @@ model-cache/
 *.download
 *.partial
 
-# ===== N8N DATA =====
-# N8N local data
+# ===== n8n DATA =====
+# n8n local data
 .n8n/
 n8n-data/
 n8n.db
 *-n8n-backup.zip
 
-# N8N encryption keys
+# n8n encryption keys
 encryptionKey.txt
 n8n-encryption-key
 

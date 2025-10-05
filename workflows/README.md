@@ -1,4 +1,4 @@
-# N8N Workflow Examples
+# n8n Workflow Examples
 
 Ready-to-import, production-quality workflows demonstrating real business use cases with AI automation.
 

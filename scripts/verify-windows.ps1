@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    N8N Workshop - Installation Verification Script
+    n8n Workshop - Installation Verification Script
 
 .DESCRIPTION
     Verifies that all Docker containers, ports, and services are running correctly.
@@ -17,7 +17,7 @@
     Requires: Docker Desktop running
 #>
 
-# N8N Workshop - Installation Verification Script
+# n8n Workshop - Installation Verification Script
 # Version: 1.1.1
 # Last Updated: 2025-10-05
 # Workshop: Go to Agentic Conference 2025
@@ -112,7 +112,7 @@ Write-Host "Checking ports..." -ForegroundColor Yellow
 $ports = @{
     "11434" = @{ Service = "Ollama"; Container = "ollama" }
     "3000"  = @{ Service = "OpenWebUI"; Container = "open-webui" }
-    "5678"  = @{ Service = "N8N"; Container = "n8n" }
+    "5678"  = @{ Service = "n8n"; Container = "n8n" }
     "5432"  = @{ Service = "PostgreSQL"; Container = "postgres" }
 }
 
@@ -167,14 +167,14 @@ try {
     Write-Check "Ollama API is NOT accessible at http://localhost:11434" $false $true
 }
 
-# Check N8N
+# Check n8n
 try {
     $response = Invoke-WebRequest -Uri "http://localhost:5678" -UseBasicParsing -TimeoutSec 5 -MaximumRedirection 0 -ErrorAction SilentlyContinue
     if ($response.StatusCode -eq 200 -or $response.StatusCode -eq 302) {
-        Write-Check "N8N web interface is accessible" $true
+        Write-Check "n8n web interface is accessible" $true
     }
 } catch {
-    Write-Check "N8N web interface is NOT accessible at http://localhost:5678" $false $true
+    Write-Check "n8n web interface is NOT accessible at http://localhost:5678" $false $true
 }
 
 # Check OpenWebUI
@@ -216,7 +216,7 @@ Write-Host "Checking Docker volumes..." -ForegroundColor Yellow
 
 $volumes = @{
     "ollama_data" = "Ollama models and config"
-    "n8n_data" = "N8N workflows and credentials"
+    "n8n_data" = "n8n workflows and credentials"
     "open_webui_data" = "OpenWebUI data"
     "postgres_data" = "PostgreSQL database"
 }
@@ -264,7 +264,7 @@ if ($allGood) {
     Write-Host ""
     Write-Host "[LINK] Access your services:" -ForegroundColor Cyan
     Write-Host "  * OpenWebUI:  http://localhost:3000  (Chat with LLMs)" -ForegroundColor White
-    Write-Host "  * N8N:        http://localhost:5678  (Build workflows)" -ForegroundColor White
+    Write-Host "  * n8n:        http://localhost:5678  (Build workflows)" -ForegroundColor White
     Write-Host "  * Ollama API: http://localhost:11434 (LLM API endpoint)" -ForegroundColor White
     Write-Host ""
     Write-Host "[INFO] Next steps:" -ForegroundColor Yellow

@@ -39,7 +39,7 @@ services:
       retries: 3
       start_period: 40s
 
-  # N8N - Workflow Automation & Agent Orchestration
+  # n8n - Workflow Automation & Agent Orchestration
   n8n:
     image: n8nio/n8n:latest
     container_name: n8n
@@ -72,7 +72,7 @@ services:
       retries: 3
       start_period: 60s
 
-  # PostgreSQL - Open Source Database for N8N and Business Data
+  # PostgreSQL - Open Source Database for n8n and Business Data
   postgres:
     image: postgres:15-alpine
     container_name: postgres

@@ -52,11 +52,11 @@ id_ed25519              # Ed25519 private key
 *-backup.sql            # Database backups
 ```
 
-#### 5. N8N Encryption Keys
+#### 5. n8n Encryption Keys
 ```
-encryptionKey.txt       # N8N encryption key
+encryptionKey.txt       # n8n encryption key
 n8n-encryption-key      # Alternative key file
-.n8n/                   # N8N local data directory
+.n8n/                   # n8n local data directory
 ```
 
 ---
@@ -100,7 +100,7 @@ configs/.env.example                # Environment variable template
 scripts/*.ps1           # PowerShell scripts
 scripts/*.sh            # Bash scripts
 docs/*.md               # Documentation
-workflows/*.json        # N8N workflow examples
+workflows/*.json        # n8n workflow examples
 examples/*.sql          # Sample database schemas
 ```
 
@@ -182,7 +182,7 @@ POSTGRES_USER=workshop
 POSTGRES_PASSWORD=change-this-password
 POSTGRES_DB=workshop_db
 
-# N8N Encryption Key (generate with: openssl rand -hex 32)
+# n8n Encryption Key (generate with: openssl rand -hex 32)
 N8N_ENCRYPTION_KEY=your-32-byte-hex-key-here
 ```
 
@@ -255,7 +255,7 @@ git diff --staged --name-only | grep -E '\.(env|key|pem|crt|p12|pfx)$'
 ### What Attendees Should NOT Share
 
 1. **Personal .env files** - Contains OAuth credentials
-2. **N8N workflows with credentials** - May contain API keys
+2. **n8n workflows with credentials** - May contain API keys
 3. **Database dumps** - May contain sample data with PII
 4. **Custom configurations** - May reveal infrastructure
 
@@ -268,7 +268,7 @@ git diff --staged --name-only | grep -E '\.(env|key|pem|crt|p12|pfx)$'
 
 ### Sharing Workflows Safely
 
-**Before exporting N8N workflow:**
+**Before exporting n8n workflow:**
 1. Go to workflow settings
 2. Enable "Export without credentials"
 3. Review JSON for any hardcoded secrets
@@ -319,7 +319,7 @@ git diff --staged --name-only | grep -E '\.(env|key|pem|crt|p12|pfx)$'
 **During workshop:**
 - [ ] Remind attendees to use `.env.example` template
 - [ ] Show how to verify secrets aren't staged: `git status`
-- [ ] Demonstrate safe workflow export in N8N
+- [ ] Demonstrate safe workflow export in n8n
 - [ ] Monitor for accidental secret sharing in chat
 
 **After workshop:**

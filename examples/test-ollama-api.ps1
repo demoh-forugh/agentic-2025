@@ -101,4 +101,4 @@ Write-Host ""
 Write-Host "Next steps:" -ForegroundColor Yellow
 Write-Host "  • Try different models with the -model parameter" -ForegroundColor White
 Write-Host "  • Experiment with temperature and other parameters" -ForegroundColor White
-Write-Host "  • Use these patterns in your N8N workflows" -ForegroundColor White
+Write-Host "  • Use these patterns in your n8n workflows" -ForegroundColor White

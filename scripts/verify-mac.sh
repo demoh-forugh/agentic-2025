@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# N8N Workshop - Installation Verification Script (macOS)
+# n8n Workshop - Installation Verification Script (macOS)
 # Version: 1.1.1
 # Last Updated: 2025-10-05
 # Workshop: Go to Agentic Conference 2025
@@ -107,7 +107,7 @@ info "Checking ports..."
 declare -A ports=(
   [11434]="Ollama:ollama"
   [3000]="OpenWebUI:open-webui"
-  [5678]="N8N:n8n"
+  [5678]="n8n:n8n"
   [5432]="PostgreSQL:postgres"
 )
 
@@ -159,11 +159,11 @@ else
   check "Ollama API is NOT accessible at http://localhost:11434" false true
 fi
 
-# Check N8N
+# Check n8n
 if curl -fsS -o /dev/null -w '%{http_code}' http://localhost:5678 2>/dev/null | grep -qE '^(200|302)$'; then
-  check "N8N web interface is accessible" true
+  check "n8n web interface is accessible" true
 else
-  check "N8N web interface is NOT accessible at http://localhost:5678" false true
+  check "n8n web interface is NOT accessible at http://localhost:5678" false true
 fi
 
 # Check OpenWebUI
@@ -231,7 +231,7 @@ if [[ "$all_good" == "true" ]]; then
   echo ""
   echo "🔗 Access your services:"
   echo "  • OpenWebUI:  http://localhost:3000  (Chat with LLMs)"
-  echo "  • N8N:        http://localhost:5678  (Build workflows)"
+  echo "  • n8n:        http://localhost:5678  (Build workflows)"
   echo "  • Ollama API: http://localhost:11434 (LLM API endpoint)"
   echo ""
   echo "📋 Next steps:"

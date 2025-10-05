@@ -36,7 +36,7 @@ You now have a complete local AI agent stack running!
 ### Next Steps
 
 {{ ... }}
-2. **[Sample Workflows](../workflows/)** - Import pre-built workflows into N8N
+2. **[Sample Workflows](../workflows/)** - Import pre-built workflows into n8n
 3. **Test Your Setup** - Try the hello-world workflow
 
 ---
@@ -110,7 +110,7 @@ open http://localhost:3000/                # OpenWebUI (opens default browser)
 ### Access URLs (same as Windows)
 
 - **OpenWebUI**: http://localhost:3000
-- **N8N**: http://localhost:5678
+- **n8n**: http://localhost:5678
 - **Ollama API**: http://localhost:11434
 
 ## 📊 Resource Usage
@@ -120,7 +120,7 @@ open http://localhost:3000/                # OpenWebUI (opens default browser)
 - **Ollama (with llama3.2 4GB model)**: ~4-6GB RAM
 - **Ollama (with llama3.2:1b 1GB model)**: ~1-2GB RAM
 - **OpenWebUI**: ~200-300MB RAM
-- **N8N**: ~300-500MB RAM
+- **n8n**: ~300-500MB RAM
 - **Docker overhead**: ~500MB RAM
 
 **Total Expected**: 
@@ -142,7 +142,7 @@ nvidia-smi
 - **Ollama (active inference with GPU)**: [MEASURE NEEDED]
 - **Ollama (active inference CPU-only)**: [MEASURE NEEDED]
 - **OpenWebUI**: [MEASURE NEEDED]
-- **N8N**: [MEASURE NEEDED]
+- **n8n**: [MEASURE NEEDED]
 - **Docker Desktop overhead**: [MEASURE NEEDED]
 - **GPU usage during inference**: [MEASURE NEEDED]
 - **CPU usage during inference**: [MEASURE NEEDED]
