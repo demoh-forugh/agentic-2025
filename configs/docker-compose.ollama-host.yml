@@ -1,0 +1,9 @@
+# Override to use a host-installed Ollama (e.g., macOS with Metal GPU),
+# instead of the ollama container. This points OpenWebUI to the host.
+# Usage (example):
+#   docker compose -f docker-compose.yml -f configs/docker-compose.ollama-host.yml up -d open-webui n8n
+services:
+  open-webui:
+    environment:
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+    depends_on: []

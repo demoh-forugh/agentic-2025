@@ -1,0 +1,17 @@
+# Optional GPU override for Ollama. This file is only used when included
+# alongside the base compose file, e.g.:
+#   docker compose -f docker-compose.yml -f configs/docker-compose.gpu.yml up -d
+# The Windows setup script will auto-include this when an NVIDIA GPU is detected.
+services:
+  ollama:
+    # Compose v2 maps this to the Docker --gpus option when not using Swarm.
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility

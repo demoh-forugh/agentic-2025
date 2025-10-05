@@ -1,0 +1,372 @@
+{
+  "name": "02 - Email Triage Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 15
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger-001",
+      "name": "Every 15 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "returnAll": false,
+        "limit": 10,
+        "filters": {
+          "labelIds": ["INBOX", "UNREAD"]
+        }
+      },
+      "id": "gmail-fetch-001",
+      "name": "Get Unread Emails",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [450, 300],
+      "credentials": {
+        "googleApi": {
+          "id": "1",
+          "name": "Google Workshop Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.messages.length }}",
+              "operation": "larger",
+              "value2": 0
+            }
+          ]
+        }
+      },
+      "id": "if-has-emails-001",
+      "name": "Has Unread Emails?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "messages",
+        "options": {}
+      },
+      "id": "split-items-001",
+      "name": "Split Emails",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 1,
+      "position": [850, 250]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "messageId": "={{ $json.id }}",
+        "format": "full"
+      },
+      "id": "gmail-get-detail-001",
+      "name": "Get Email Details",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [1050, 250],
+      "credentials": {
+        "googleApi": {
+          "id": "1",
+          "name": "Google Workshop Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "prompt": "=Analyze this email and provide a JSON response with: category (urgent/important/normal/spam), priority (1-5), summary (1 sentence), and suggested_action (reply/archive/flag/delete).\n\nFrom: {{ $json.payload.headers.find(h => h.name === 'From').value }}\nSubject: {{ $json.payload.headers.find(h => h.name === 'Subject').value }}\nBody: {{ $json.snippet }}",
+        "options": {
+          "temperature": 0.3,
+          "responseFormat": "json"
+        }
+      },
+      "id": "ollama-analyze-001",
+      "name": "Analyze with AI",
+      "type": "n8n-nodes-base.ollama",
+      "typeVersion": 1,
+      "position": [1250, 250],
+      "credentials": {
+        "ollamaApi": {
+          "id": "1",
+          "name": "Ollama Local"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "email_id",
+              "value": "={{ $('Get Email Details').item.json.id }}"
+            },
+            {
+              "name": "from",
+              "value": "={{ $('Get Email Details').item.json.payload.headers.find(h => h.name === 'From').value }}"
+            },
+            {
+              "name": "subject",
+              "value": "={{ $('Get Email Details').item.json.payload.headers.find(h => h.name === 'Subject').value }}"
+            },
+            {
+              "name": "ai_category",
+              "value": "={{ $json.category || 'unknown' }}"
+            },
+            {
+              "name": "ai_priority",
+              "value": "={{ $json.priority || 3 }}"
+            },
+            {
+              "name": "ai_summary",
+              "value": "={{ $json.summary || 'No summary available' }}"
+            },
+            {
+              "name": "suggested_action",
+              "value": "={{ $json.suggested_action || 'review' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "format-results-001",
+      "name": "Format Results",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [1450, 250]
+    },
+    {
+      "parameters": {
+        "resource": "messageLabel",
+        "operation": "add",
+        "messageId": "={{ $json.email_id }}",
+        "labelIds": {
+          "labels": ["STARRED"]
+        }
+      },
+      "id": "gmail-label-urgent-001",
+      "name": "Star Urgent Emails",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [1650, 200],
+      "credentials": {
+        "googleApi": {
+          "id": "1",
+          "name": "Google Workshop Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.ai_category }}",
+              "operation": "equals",
+              "value2": "urgent"
+            }
+          ]
+        }
+      },
+      "id": "if-urgent-001",
+      "name": "Is Urgent?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1650, 250]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "sheetName": "Email Log",
+        "columns": {
+          "mappings": [
+            {
+              "column": "Timestamp",
+              "value": "={{ $now.toISO() }}"
+            },
+            {
+              "column": "From",
+              "value": "={{ $json.from }}"
+            },
+            {
+              "column": "Subject",
+              "value": "={{ $json.subject }}"
+            },
+            {
+              "column": "Category",
+              "value": "={{ $json.ai_category }}"
+            },
+            {
+              "column": "Priority",
+              "value": "={{ $json.ai_priority }}"
+            },
+            {
+              "column": "Summary",
+              "value": "={{ $json.ai_summary }}"
+            },
+            {
+              "column": "Action",
+              "value": "={{ $json.suggested_action }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "sheets-log-001",
+      "name": "Log to Spreadsheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 3,
+      "position": [1850, 250],
+      "credentials": {
+        "googleApi": {
+          "id": "1",
+          "name": "Google Workshop Account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Every 15 Minutes": {
+      "main": [
+        [
+          {
+            "node": "Get Unread Emails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Unread Emails": {
+      "main": [
+        [
+          {
+            "node": "Has Unread Emails?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Unread Emails?": {
+      "main": [
+        [
+          {
+            "node": "Split Emails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Emails": {
+      "main": [
+        [
+          {
+            "node": "Get Email Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Email Details": {
+      "main": [
+        [
+          {
+            "node": "Analyze with AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze with AI": {
+      "main": [
+        [
+          {
+            "node": "Format Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Results": {
+      "main": [
+        [
+          {
+            "node": "Is Urgent?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Urgent?": {
+      "main": [
+        [
+          {
+            "node": "Star Urgent Emails",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log to Spreadsheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Star Urgent Emails": {
+      "main": [
+        [
+          {
+            "node": "Log to Spreadsheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "id": "2",
+  "meta": {
+    "instanceId": "workshop-demo"
+  },
+  "tags": [
+    {
+      "name": "workshop",
+      "id": "1"
+    },
+    {
+      "name": "gmail",
+      "id": "3"
+    },
+    {
+      "name": "agent",
+      "id": "4"
+    }
+  ]
+}

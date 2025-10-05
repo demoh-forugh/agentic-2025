@@ -1,0 +1,117 @@
+# Git Attributes for Workshop Repository
+# Last Updated: 2025-10-05 (v1.1.1)
+# =====================================================
+
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# ===== SCRIPTS =====
+# PowerShell scripts - Windows line endings
+*.ps1 text eol=crlf
+*.psm1 text eol=crlf
+*.psd1 text eol=crlf
+
+# Bash scripts - Unix line endings
+*.sh text eol=lf
+*.bash text eol=lf
+
+# ===== CONFIGURATION FILES =====
+# YAML/JSON - Unix line endings (more portable)
+*.yml text eol=lf
+*.yaml text eol=lf
+*.json text eol=lf
+
+# Docker files - Unix line endings
+Dockerfile text eol=lf
+*.dockerfile text eol=lf
+.dockerignore text eol=lf
+docker-compose*.yml text eol=lf
+
+# Environment files
+.env* text eol=lf
+*.env text eol=lf
+
+# ===== DOCUMENTATION =====
+# Markdown - Unix line endings
+*.md text eol=lf
+*.markdown text eol=lf
+
+# Text files
+*.txt text eol=lf
+
+# ===== SOURCE CODE =====
+# SQL
+*.sql text eol=lf
+
+# JavaScript/TypeScript
+*.js text eol=lf
+*.ts text eol=lf
+*.jsx text eol=lf
+*.tsx text eol=lf
+*.mjs text eol=lf
+
+# Python (if used)
+*.py text eol=lf
+
+# ===== BINARY FILES =====
+# Images
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.svg text eol=lf
+
+# Archives
+*.zip binary
+*.tar binary
+*.gz binary
+*.tgz binary
+*.7z binary
+*.rar binary
+
+# Databases
+*.db binary
+*.sqlite binary
+*.sqlite3 binary
+
+# Models (Ollama)
+*.gguf binary
+*.ggml binary
+*.bin binary
+
+# ===== DIFF HANDLING =====
+# JSON files - use jsonc for better diffs
+*.json linguist-language=JSON
+
+# Lock files - don't diff (usually)
+package-lock.json linguist-generated=true
+yarn.lock linguist-generated=true
+pnpm-lock.yaml linguist-generated=true
+
+# ===== LANGUAGE DETECTION =====
+# Ensure proper language detection for GitHub
+*.ps1 linguist-language=PowerShell
+*.sh linguist-language=Shell
+*.yml linguist-language=YAML
+*.yaml linguist-language=YAML
+
+# Exclude from language stats
+archive/** linguist-documentation
+docs/** linguist-documentation
+examples/** linguist-documentation
+
+# ===== MERGE STRATEGIES =====
+# Keep ours strategy for these files during merge
+CLAUDE.md merge=ours
+.gitignore merge=union
+.gitattributes merge=union
+
+# ===== EXPORT-IGNORE =====
+# Files to exclude from git archive
+.gitattributes export-ignore
+.gitignore export-ignore
+.github/ export-ignore
+archive/ export-ignore
+CURRENT_TEST_STATUS.md export-ignore
+*.log export-ignore

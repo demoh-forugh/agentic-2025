@@ -1,0 +1,400 @@
+# ============================================
+# Workshop Repository .gitignore
+# Last Updated: 2025-10-05 (v1.1.1)
+# ============================================
+
+CLAUDE.md
+
+# ===== SECRETS & CREDENTIALS =====
+# Critical: Never commit sensitive data
+.env
+.env.local
+.env.production
+.env.staging
+.env.*.local
+*.key
+*.pem
+*.p12
+*.pfx
+*.cer
+*.crt
+*.der
+credentials.json
+token.json
+*-credentials.json
+*-secret.json
+secrets/
+secret-*
+*password*
+*apikey*
+*.gpg
+
+# Google OAuth & API Credentials
+client_secret*.json
+service-account*.json
+oauth-credentials.json
+
+# SSH Keys
+id_rsa
+id_dsa
+id_ecdsa
+id_ed25519
+*.pub
+
+# Certificate files
+*.csr
+*.key
+*.keystore
+*.jks
+
+# ===== DOCKER & CONTAINERS =====
+# Docker data and volumes (large files)
+docker-compose.override.yml
+volumes/
+.docker/
+*.dockerignore.local
+
+# Container state files
+.container-state
+container-*.json
+
+# Docker volumes backup
+*-volume-backup.tar.gz
+*-volume-backup.zip
+
+# ===== DATABASE FILES =====
+# PostgreSQL
+*.sql.gz
+*.dump
+pgdata/
+postgres-data/
+*.psql
+
+# SQLite
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Database backups
+*-backup.sql
+*-dump.sql
+database-backup-*
+
+# ===== OLLAMA & MODELS =====
+# Ollama models (very large files - download separately)
+ollama-data/
+*.gguf
+*.ggml
+*.bin
+models/
+model-cache/
+
+# Model downloads in progress
+*.download
+*.partial
+
+# ===== N8N DATA =====
+# N8N local data
+.n8n/
+n8n-data/
+n8n.db
+*-n8n-backup.zip
+
+# N8N encryption keys
+encryptionKey.txt
+n8n-encryption-key
+
+# ===== LOGS & OUTPUT =====
+# Script logs (PowerShell transcripts, bash logs)
+logs/
+*.log
+*.log.*
+setup-*.log
+verify-*.log
+measure-*.log
+test-*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# PowerShell transcripts
+transcript-*.txt
+PowerShell_transcript.*.txt
+
+# Bash history
+.bash_history
+.zsh_history
+
+# ===== PERFORMANCE & TESTING =====
+# Generated artifacts
+artifacts/
+performance-cold-warm-*.json
+benchmark-results/
+test-results/
+coverage/
+
+# Temporary test files
+*-test-output.json
+*-test-data.json
+
+# ===== OS-SPECIFIC FILES =====
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ===== IDE & EDITORS =====
+# Claude Code
+.claude/
+
+# VSCode
+.vscode/
+.vscode-test/
+*.code-workspace
+
+# JetBrains (IntelliJ, PyCharm, WebStorm, etc.)
+.idea/
+*.iml
+*.ipr
+*.iws
+.idea_modules/
+out/
+
+# Vim
+*.swp
+*.swo
+*.swn
+*~
+.vim/
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]
+Session.vim
+Sessionx.vim
+.netrwhist
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# Sublime Text
+*.tmlanguage.cache
+*.tmPreferences.cache
+*.stTheme.cache
+*.sublime-workspace
+*.sublime-project
+sftp-config.json
+sftp-config-alt*.json
+
+# Atom
+.atom/
+
+# ===== NODE.JS & NPM =====
+# Dependencies
+node_modules/
+jspm_packages/
+bower_components/
+
+# Lock files (optional - some prefer to commit these)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+.pnpm-debug.log
+
+# Build output
+dist/
+build/
+.cache/
+
+# npm
+.npm
+.eslintcache
+.node_repl_history
+
+# ===== PYTHON (if used for scripts) =====
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+env/
+.venv
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ===== TEMPORARY FILES =====
+tmp/
+temp/
+*.tmp
+*.temp
+*.cache
+*.bak
+*.backup
+*.old
+*.orig
+.temp/
+.tmp/
+
+# ===== BACKUP FILES =====
+*-backup.*
+*-backup-*
+*.backup
+*.bak
+*.old
+*.orig
+backup-*
+backups/
+
+# ===== PERSONAL & LOCAL =====
+# Personal notes (developers can keep local notes)
+NOTES.md
+NOTES.txt
+TODO.md
+SCRATCH.md
+.personal/
+.local/
+local-*
+*-local.*
+
+# Local configuration overrides
+*-local.yml
+*-local.yaml
+*-local.json
+local.config.*
+
+# ===== WORKSHOP-SPECIFIC =====
+# Workshop attendee data
+workshop-notes/
+attendee-data/
+my-workflows/
+custom-workflows/
+
+# Local experiments
+experiments/
+sandbox/
+scratch/
+
+# ===== ARCHIVES & COMPRESSED =====
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+*.gz
+*.bz2
+*.xz
+
+# Exception: Keep example archives if needed
+!examples/**/*.zip
+!examples/**/*.tar.gz
+
+# ===== MEDIA & LARGE FILES =====
+# Exclude large media files (use Git LFS if needed)
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.flv
+*.wmv
+*.iso
+*.dmg
+
+# Large datasets
+dataset/
+data-large/
+*.csv.gz
+*.parquet
+
+# ===== SECURITY SCANNING =====
+# Security scan results
+.trivy/
+.snyk/
+security-scan-*.json
+vulnerability-report.json
+
+# ===== CI/CD & DEPLOYMENT =====
+# CI/CD temporary files
+.github/workflows-local/
+.circleci/local/
+.travis/local/
+
+# Deployment artifacts
+deploy/
+deployment-*.json
+
+# ===== DOCKER COMPOSE COPIED FILES =====
+# Root-level copies (generated by setup scripts)
+# These are copied from configs/ directory
+docker-compose.yml
+.env
+
+# Keep the originals in configs/
+!configs/docker-compose.yml
+!configs/docker-compose.gpu.yml
+!configs/docker-compose.ollama-host.yml
+!configs/.env.example
+
+# ===== EXCEPTIONS =====
+# Explicitly include these files even if matched above
+!.gitignore
+!.gitattributes
+!.editorconfig
+!.env.example
+!configs/.env.example
+!README.md
+
+
+# ===== END OF .gitignore =====
