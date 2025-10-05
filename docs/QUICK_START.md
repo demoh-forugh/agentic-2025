@@ -473,24 +473,42 @@ docker logs ollama
 docker-compose restart ollama
 ```
 
+### Credential Overwrite Not Working
+
+**Problem:** When creating new Ollama credentials, the Base URL shows `localhost:11434` instead of `http://ollama:11434`
+
+**Root Cause:** The credential type name in `n8n-credentials-overwrite.json` doesn't match n8n's internal credential type.
+
+**Fix:**
+1. Stop the stack: `docker-compose down`
+2. Verify `configs/n8n-credentials-overwrite.json` has the correct credential type name:
+   ```json
+   {
+     "lmChatOllama": {
+       "baseUrl": "http://ollama:11434"
+     }
+   }
+   ```
+3. Start the stack: `docker-compose up -d`
+4. In n8n UI, delete any existing Ollama credentials
+5. Create a new Ollama credential - it should now be pre-filled with `http://ollama:11434`
+
+**Important Notes:**
+- Credential overwrites only affect **NEW** credential creation
+- You must **restart n8n** after changing the overwrite file
+- You do **NOT** need to delete Docker volumes
+- The credential type name must be `lmChatOllama` (not `ollamaApi`)
+
 ### n8n can't connect to Ollama
 
 **Error:** "Connection refused" or "ECONNREFUSED" when executing n8n workflows
 
-**This should rarely happen** since the Ollama credential is pre-configured automatically. If you see this error:
-
-**Possible Causes:**
-1. You manually created a new Ollama credential instead of using the pre-configured one
-2. You edited the pre-configured credential and used `localhost:11434`
-
 **Fix:**
-1. In n8n, open your workflow
-2. Click the Ollama node
-3. In "Credential to connect with" dropdown, select **"Ollama Local"** (the pre-configured credential)
-4. If you don't see it, go to **Settings** → **Credentials** → **Ollama API**
-5. The Base URL should be: **`http://ollama:11434`**
-6. If it shows `localhost:11434`, change it to `http://ollama:11434`
-7. Click **Save** and try executing the workflow again
+1. In n8n, go to **Settings** → **Credentials**
+2. Find your Ollama credential and click **Edit**
+3. Change Base URL to: **`http://ollama:11434`** (not `localhost:11434`)
+4. Click **Save**
+5. Try executing the workflow again
 
 **Why `http://ollama:11434` and not `localhost`?** Inside Docker, `localhost` refers to the n8n container itself, not other containers. Use the service name `ollama` to reach the Ollama container on the shared Docker network.
 

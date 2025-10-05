@@ -1,6 +1,6 @@
 # n8n Credentials Configuration
 
-## ⚠️ Important Understanding
+## ⚠️ Critical Understanding
 
 **CREDENTIALS_OVERWRITE_DATA does NOT automatically create credentials.** It only pre-fills field values when users manually create new credentials in the n8n UI.
 
@@ -13,6 +13,38 @@
 - ❌ Does not automatically create credential entries
 - ❌ Does not automatically assign credentials to imported workflows
 - ❌ Workflows imported with credential references will still prompt users to select/create credentials
+
+### 🔴 CRITICAL: Credential Type Names Must Match Exactly
+
+The keys in your credential overwrite JSON **must match n8n's internal credential type names exactly**. These are NOT the same as node type names!
+
+**Common Mistakes:**
+- ❌ `"ollamaApi"` - This is wrong (old credential type)
+- ✅ `"lmChatOllama"` - This is correct (LangChain Ollama credential)
+- ❌ `"postgresDb"` - This is wrong
+- ✅ `"postgres"` - This is correct
+
+**How to Find the Correct Credential Type Name:**
+1. In n8n UI, go to **Settings** → **Credentials**
+2. Click **"Add Credential"**
+3. The credential type name is shown in the URL: `/credentials/new/[CREDENTIAL_TYPE_NAME]`
+4. Or inspect the node's credential configuration in the workflow JSON
+
+### 🔄 When Changes Take Effect
+
+**Important:** Credential overwrites are loaded when n8n starts. To pick up changes:
+
+1. **After editing the overwrite file:** Restart the n8n container
+   ```bash
+   docker-compose restart n8n
+   ```
+
+2. **You do NOT need to delete volumes** - Credential overwrites only affect NEW credential creation, not existing credentials
+
+3. **To test if overwrites are working:**
+   - Delete any existing credentials of that type in n8n UI
+   - Create a new credential
+   - The overwritten fields should be pre-filled and read-only
 
 ## Environment Variables for Credentials
 
