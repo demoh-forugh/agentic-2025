@@ -1,36 +1,6 @@
 # System Specifications Summary
 
-Quick reference comparing the demo system to recommended attendee systems.
-
----
-
-> For measured performance numbers, see [SYSTEM_SPECS.md](./SYSTEM_SPECS.md#performance-metrics-from-demo-system). This summary intentionally avoids duplicating numeric metrics.
-
-## 🖥️ Demo System (What We Used)
-
-```
-OS:       Windows 11 Pro 24H2 (Build 26100)
-CPU:      AMD Ryzen 9 3900X (12 cores, 24 threads @ 3.8GHz)
-RAM:      128GB DDR4 @ 3200MHz (4x 32GB Micron)
-GPU:      NVIDIA GeForce RTX 4090 (24GB VRAM)
-Storage:  2TB PCIe NVMe SSD + 250GB Samsung 970 EVO Plus
-WSL2:     v2.3.24.0 (Kernel 5.15.153.1-2)
-Docker:   Docker Desktop (latest)
-```
-
-### Performance Metrics
-See [SYSTEM_SPECS.md](./SYSTEM_SPECS.md#performance-metrics-from-demo-system) for demo system measurements. The per-configuration figures below are **[TO BE MEASURED]**.
-
-**With GPU Acceleration:**
-- **Response time**: [TO BE MEASURED]
-- **GPU VRAM usage**: [TO BE MEASURED]
-- **System RAM usage**: [TO BE MEASURED]
-- **GPU utilization**: [TO BE MEASURED]
-
-**CPU-Only Mode:**
-- **Response time**: [TO BE MEASURED]
-- **System RAM usage**: [TO BE MEASURED]
-- **CPU utilization**: [TO BE MEASURED]
+Quick reference for recommended workshop attendee systems.
 
 ---
 
@@ -79,7 +49,7 @@ Storage:  100GB+ SSD
 ### For Workshop Attendees
 
 1. **GPU is NOT required**
-   - Demo system has RTX 4090 but workshop supports CPU-only
+   - Workshop fully supports CPU-only operation
    - GPU expected to provide speedup but is completely optional
    - All workflows function identically with or without GPU
 
@@ -104,8 +74,6 @@ Storage:  100GB+ SSD
 
 | System Config | Model | Response Time | Status |
 |---------------|-------|---------------|--------|
-| **Demo (GPU)** | llama3.2 (4GB) | [MEASURE NEEDED] | Unknown |
-| **Demo (CPU)** | llama3.2 (4GB) | [MEASURE NEEDED] | Unknown |
 | 32GB RAM (CPU) | llama3.2 (4GB) | [MEASURE NEEDED] | Unknown |
 | 16GB RAM (CPU) | llama3.2 (4GB) | [MEASURE NEEDED] | Unknown |
 | 8GB RAM (CPU) | llama3.2:1b (1GB) | [MEASURE NEEDED] | Unknown |
@@ -115,37 +83,15 @@ Storage:  100GB+ SSD
 
 ## 💰 Cost Comparison
 
-### Demo System Cost (Retail)
-- **CPU**: AMD Ryzen 9 3900X → ~$300-400
-- **RAM**: 128GB DDR4 @ 3200MHz → ~$300-400
-- **GPU**: RTX 4090 24GB → ~$1,600-2,000
-- **Storage**: 2TB NVMe + 250GB → ~$200-300
-- **Motherboard/PSU/Case**: ~$300-500
-- **Total**: ~$2,700-3,600
-
-### Recommended Attendee System
+### Recommended System (16GB RAM)
 - **16GB RAM PC with modern CPU**: ~$600-900
 - **No GPU needed**: $0
-- **Total**: ~$600-900 (2-3x cheaper than demo)
+- **Total**: ~$600-900
 
-### Budget Option
+### Budget Option (8GB RAM)
 - **8GB RAM PC**: ~$400-600
 - Works perfectly with smaller models
 - Great for learning and experimentation
-
----
-
-## 🔍 Why the High-End Demo System?
-
-Our demo system is intentionally over-spec'd to:
-
-1. **Test both modes**: Verify CPU-only and GPU acceleration
-2. **Run multiple models**: Compare different models simultaneously
-3. **Handle large audiences**: Screen sharing during presentations
-4. **Stress testing**: Ensure stability under heavy load
-5. **Future-proofing**: Test with larger models (13B, 70B)
-
-**But remember**: The workshop is designed for attendees with modest hardware!
 
 ---
 
@@ -160,8 +106,6 @@ Our demo system is intentionally over-spec'd to:
 - [ ] Docker Desktop installed
 
 **No GPU required!**
-**No 128GB RAM required!**
-**No Ryzen 9 3900X required!**
 
 The workshop is designed for everyday hardware. Testing in progress.
 
@@ -171,15 +115,7 @@ The workshop is designed for everyday hardware. Testing in progress.
 
 **Status**: Not yet measured
 
-### Demo System (GPU Mode)
-```
-RAM Usage:     [TO BE MEASURED]
-GPU VRAM:      [TO BE MEASURED]
-CPU Usage:     [TO BE MEASURED]
-Response Time: [TO BE MEASURED]
-```
-
-### Typical Attendee System (16GB RAM, CPU-only)
+### Typical System (16GB RAM, CPU-only)
 ```
 RAM Usage:     [TO BE MEASURED]
 CPU Usage:     [TO BE MEASURED]
@@ -223,10 +159,10 @@ Testing required to confirm all configurations work.
 
 ## 📞 Questions?
 
-**Q: Do I need 128GB RAM?**
-A: No! 8GB minimum, 16GB recommended.
+**Q: How much RAM do I need?**
+A: 8GB minimum, 16GB recommended.
 
-**Q: Do I need an RTX 4090?**
+**Q: Do I need a GPU?**
 A: No! GPU is completely optional. CPU-only works great.
 
 **Q: Will the workshop be slower for me?**

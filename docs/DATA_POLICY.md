@@ -38,11 +38,9 @@
 ## Current Status
 
 ### Measured Data (Real)
-- **System Hardware**: AMD Ryzen 9 3900X, 128GB RAM, RTX 4090
-- **Operating System**: Windows 11 Pro 24H2 (Build 26100)
-- **WSL2 Version**: v2.3.24.0 (Kernel 5.15.153.1-2)
-- **Storage**: 2TB + 250GB NVMe SSDs
-- **GPU**: NVIDIA GeForce RTX 4090 (24GB VRAM)
+- **System Configuration**: See [SYSTEM_SPECS.md](./SYSTEM_SPECS.md) for hardware specifications
+- **Cold/Warm Performance**: Measured on 2025-10-04 (see SYSTEM_SPECS.md)
+- **Container Stats**: Before/after measurements captured
 
 ### Not Yet Measured (Marked as Unknown)
 - **LLM Response Times**: [TO BE MEASURED]

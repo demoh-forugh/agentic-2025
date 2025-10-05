@@ -14,14 +14,6 @@ Get up and running in 15 minutes! ⚡
 - **Storage**: 20GB free disk space
 - **Docker**: Docker Desktop installed and running
 
-### Demo System (What This Was Tested On)
-- **OS**: Windows 11 Pro 24H2 (Build 26100)
-- **CPU**: AMD Ryzen 9 3900X (12 cores, 24 threads)
-- **RAM**: 128GB DDR4 @ 3200MHz
-- **GPU**: NVIDIA GeForce RTX 4090 (24GB VRAM)
-- **Storage**: 2TB PCIe NVMe SSD
-- See [SYSTEM_SPECS.md](./SYSTEM_SPECS.md#performance-metrics-from-demo-system) for measured performance results and methodology.
-
 **💡 Tips**: 
 - The first request pays the model load cost; keep the container warm for fast responses
 - GPU acceleration improves throughput but is NOT required (CPU-only runs are supported)

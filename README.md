@@ -52,18 +52,6 @@ For detailed value proposition and cost analysis, see [Workshop Goals](./docs/GO
 - **Skills**: Basic familiarity with command line
 - **Account**: Google account for API integration demos
 
-### Demo System Specifications
-*This workshop demo was built and tested on:*
-- **OS**: Windows 11 Pro 24H2 (Build 26100)
-- **CPU**: AMD Ryzen 9 3900X (12 cores, 24 threads)
-- **RAM**: 128GB DDR4 @ 3200MHz
-- **GPU**: NVIDIA GeForce RTX 4090 (24GB VRAM)
-- **Storage**: 2TB PCIe NVMe SSD
-- **WSL2**: v2.3.24.0
-- **Models Used**: llama3.2 (4GB) and llama3.2:1b (1GB)
-
-**Performance summary:** See [SYSTEM_SPECS.md](./docs/SYSTEM_SPECS.md#performance-metrics-from-demo-system) for measured results (model, dates, and methodology).
-
 ---
 
 ## 🚀 Quick Start

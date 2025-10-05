@@ -15,22 +15,6 @@ This guide walks you through installing all required components for the workshop
 - **GPU**: Optional (NVIDIA GPU for faster inference)
 - **Internet**: Required for initial setup and model downloads
 
-### Demo System Specifications
-*This workshop was developed and tested on:*
-- **OS**: Windows 11 Pro 24H2 (Build 26100)
-- **CPU**: AMD Ryzen 9 3900X (12 cores, 24 threads, 3.8GHz base)
-- **RAM**: 128GB DDR4 @ 3200MHz (4x 32GB Micron)
-- **GPU**: NVIDIA GeForce RTX 4090 (24GB VRAM)
-- **Storage**: 2TB PCIe NVMe SSD + 250GB Samsung 970 EVO Plus
-- **Docker**: Docker Desktop (latest)
-- **WSL2**: v2.3.24.0 (Kernel 5.15.153.1-2)
-
-**Performance Expectations:**
-- Performance metrics: [TO BE MEASURED]
-- GPU acceleration expected to provide speedup over CPU-only
-
-**Note**: This demo system has GPU acceleration, but the workshop fully supports CPU-only setups. GPU is NOT required.
-
 ---
 
 ## Step## 10) Install n8nDocker Desktop
@@ -143,12 +127,7 @@ open http://localhost:3000/                # OpenWebUI (opens default browser)
 - With 4GB model: ~5-7GB RAM in active use
 - With 1GB model: ~2-4GB RAM in active use
 
-### Actual Demo System Measurements
-See [SYSTEM_SPECS.md](./SYSTEM_SPECS.md#performance-metrics-from-demo-system) for the workshop's measured performance results and methodology.
-
-The steps below show how to measure on your own system to compare against the central results.
-
-**To collect real measurements:**
+**To measure on your own system:**
 ```powershell
 # Start containers
 docker-compose up -d
