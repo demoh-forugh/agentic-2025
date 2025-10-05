@@ -46,6 +46,11 @@ $env:ENABLE_LOGGING="1"
 
 #### macOS
 ```bash
+# First run only: ensure scripts are executable
+chmod +x ./scripts/setup-mac.sh ./scripts/verify-mac.sh
+
+# Confirm Docker Desktop for Mac is open and showing "Engine running"
+
 # Run automated setup
 ./scripts/setup-mac.sh
 
@@ -80,6 +85,7 @@ ENABLE_LOGGING=1 ./scripts/setup-mac.sh
 
 #### macOS
 ```bash
+# Requires Docker Desktop to be running
 ./scripts/verify-mac.sh
 ```
 

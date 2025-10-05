@@ -79,40 +79,52 @@ fi
 echo ""
 info "Checking containers..."
 
-REQUIRED_CONTAINERS=("ollama" "n8n" "open-webui" "postgres")
 running_containers=()
 stopped_containers=()
 missing_containers=()
 
 for container_name in "${REQUIRED_CONTAINERS[@]}"; do
-  if docker ps --format '{{.Names}}' 2>/dev/null | grep -q "^${container_name}\$"; then
+  if docker ps --format '{{.Names}}' 2>/dev/null | grep -q "^${container_name}$"; then
     check "Container '$container_name' is running" true
     running_containers+=("$container_name")
   else
     # Check if it exists but is stopped
-    if docker ps -a --format '{{.Names}}' 2>/dev/null | grep -q "^${container_name}\$"; then
+    if docker ps -a --format '{{.Names}}' 2>/dev/null | grep -q "^${container_name}$"; then
       check "Container '$container_name' exists but is NOT running" false true
       stopped_containers+=("$container_name")
     else
-      check "Container '$container_name' is NOT found" false true
+      if [[ "$container_name" == "ollama" ]]; then
+        if curl -fsS http://localhost:11434/api/tags >/dev/null 2>&1; then
+          check "Container 'ollama' not found, but host Ollama is reachable on http://localhost:11434" true
+          continue
+        else
+          check "Container '$container_name' is NOT found" false true
+        fi
+      else
+        check "Container '$container_name' is NOT found" false true
+      fi
       missing_containers+=("$container_name")
     fi
   fi
 done
 
+{{ ... }}
 # 3. Check ports and verify they're mapped to correct containers
 echo ""
 info "Checking ports..."
 
-declare -A ports=(
-  [11434]="Ollama:ollama"
-  [3000]="OpenWebUI:open-webui"
-  [5678]="n8n:n8n"
-  [5432]="PostgreSQL:postgres"
+PORT_CHECKS=(
+  "11434:Ollama:ollama"
+  "3000:OpenWebUI:open-webui"
+  "5678:n8n:n8n"
+  "5432:PostgreSQL:postgres"
 )
 
-for port in "${!ports[@]}"; do
-  IFS=':' read -r service container <<< "${ports[$port]}"
+for entry in "${PORT_CHECKS[@]}"; do
+  port=${entry%%:*}
+  remainder=${entry#*:}
+  service=${remainder%%:*}
+  container=${remainder#*:}
 
   # Check if port is mapped in container
   if docker port "$container" "$port" >/dev/null 2>&1; then
@@ -120,7 +132,9 @@ for port in "${!ports[@]}"; do
     check "Port $port ($service) mapped correctly: $mapping" true
   else
     # Fall back to checking if port is listening
-    if lsof -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1; then
+    if [[ "$container" == "ollama" ]] && curl -fsS http://localhost:11434/api/tags >/dev/null 2>&1; then
+      check "Port $port ($service) reachable via host Ollama" true
+    elif lsof -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1; then
       check "Port $port ($service) is listening (but may not be mapped to container)" false false
     else
       check "Port $port ($service) is NOT listening" false true
