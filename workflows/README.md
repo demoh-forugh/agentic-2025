@@ -438,6 +438,14 @@ curl http://localhost:11434/api/tags
 SELECT COUNT(*) FROM customer_tickets;
 ```
 
+**📚 Need SQL Query Examples?**
+See [Database Query Examples](../docs/DATABASE_QUERIES.md) for 30+ ready-to-use queries including:
+- Customer service ticket queries
+- Sales analytics queries
+- Report management
+- Advanced patterns (joins, aggregations, upserts)
+- Best practices and optimization tips
+
 ---
 
 ## 📊 Business Use Case Mapping

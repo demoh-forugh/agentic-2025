@@ -446,10 +446,10 @@ Write-Host "---------------------------------------------------------" -Foregrou
 Write-Host ""
 
 # Download Ollama model (with idempotency check)
-Write-Host "  >> Would you like to download an Ollama model? (Y/N)" -ForegroundColor Yellow
+Write-Host "  >> Would you like to download an Ollama model? (Y/n) [default: Yes]" -ForegroundColor Yellow
 $downloadModel = Read-Host
 
-if ($downloadModel -eq "Y" -or $downloadModel -eq "y") {
+if ($downloadModel -eq "" -or $downloadModel -eq "Y" -or $downloadModel -eq "y") {
     Write-Host ""
 
     # First, check existing models
@@ -470,68 +470,101 @@ if ($downloadModel -eq "Y" -or $downloadModel -eq "y") {
     Write-Host "     1. llama3.2:1b  (1GB)  - Fast, recommended for testing" -ForegroundColor White
     Write-Host "     2. llama3.2     (4GB)  - Balanced, recommended for workshop" -ForegroundColor White
     Write-Host "     3. mistral      (4GB)  - Good for coding tasks" -ForegroundColor White
-    Write-Host "     4. Skip for now" -ForegroundColor DarkGray
+    Write-Host "     4. All models   (9GB)  - Download all three (⚠️  takes longest, 15-30 min)" -ForegroundColor Cyan
+    Write-Host "     5. Skip for now" -ForegroundColor DarkGray
     Write-Host ""
 
-    $modelChoice = Read-Host "Enter choice (1-4)"
+    $modelChoice = Read-Host "Enter choice (1-5)"
 
-    $model = switch ($modelChoice) {
-        "1" { "llama3.2:1b" }
-        "2" { "llama3.2" }
-        "3" { "mistral" }
-        default { $null }
+    $models = switch ($modelChoice) {
+        "1" { @("llama3.2:1b") }
+        "2" { @("llama3.2") }
+        "3" { @("mistral") }
+        "4" { @("llama3.2:1b", "llama3.2", "mistral") }
+        default { @() }
     }
 
-    if ($model) {
-        # Check if model already exists
-        $modelExists = $false
-        try {
-            $existingModels = docker exec ollama ollama list 2>$null
-            if ($existingModels -match [regex]::Escape($model)) {
-                $modelExists = $true
-            }
-        } catch {
-            # Ollama might not be ready yet
+    if ($models.Count -gt 0) {
+        Write-Host ""
+        if ($models.Count -gt 1) {
+            Write-Status "Downloading $($models.Count) models... This will take 15-30 minutes." "INFO"
+            Write-Host "  >> Total size: ~9GB. Please be patient..." -ForegroundColor Yellow
         }
-
-        if ($modelExists) {
-            Write-Status "Model '$model' is already downloaded. Skipping." "SUCCESS"
-        } else {
-            Write-Host ""
-            Write-Status "Downloading '$model'... This may take 2-10 minutes depending on your connection." "INFO"
-            Write-Host "  >> Model size and download time varies. Please be patient..." -ForegroundColor Yellow
-            Write-Host ""
-
+        
+        $successCount = 0
+        $failCount = 0
+        
+        foreach ($model in $models) {
+            # Check if model already exists
+            $modelExists = $false
             try {
-                docker exec -it ollama ollama pull $model
-                if ($LASTEXITCODE -eq 0) {
-                    Write-Host ""
-                    Write-Status "Model '$model' downloaded successfully!" "SUCCESS"
-                } else {
-                    Write-Host ""
-                    Write-Status "Model download may have failed (exit code: $LASTEXITCODE)" "WARNING"
-                    Write-Host ""
-                    Write-Host "  >> Verify download with:" -ForegroundColor Yellow
-                    Write-Host "     docker exec -it ollama ollama list" -ForegroundColor Cyan
-                    Write-Host "  >> Retry download with:" -ForegroundColor Yellow
-                    Write-Host "     docker exec -it ollama ollama pull $model" -ForegroundColor Cyan
+                $existingModels = docker exec ollama ollama list 2>$null
+                if ($existingModels -match [regex]::Escape($model)) {
+                    $modelExists = $true
                 }
             } catch {
+                # Ollama might not be ready yet
+            }
+
+            if ($modelExists) {
+                Write-Status "Model '$model' is already downloaded. Skipping." "SUCCESS"
+                $successCount++
+            } else {
                 Write-Host ""
-                Write-Status "Failed to download model." "ERROR"
+                Write-Status "Downloading '$model'... This may take 2-10 minutes depending on your connection." "INFO"
+                if ($models.Count -eq 1) {
+                    Write-Host "  >> Model size and download time varies. Please be patient..." -ForegroundColor Yellow
+                    Write-Host "  >> After download completes, the model will be validated/extracted (may take 1-2 min)" -ForegroundColor Cyan
+                }
                 Write-Host ""
-                Write-Host "  >> Troubleshooting:" -ForegroundColor Yellow
-                Write-Host "     * Check internet connection" -ForegroundColor White
-                Write-Host "     * Verify Ollama container is running:" -ForegroundColor White
-                Write-Host "       docker ps | findstr ollama" -ForegroundColor Cyan
-                Write-Host "     * Check Ollama logs:" -ForegroundColor White
-                Write-Host "       docker logs ollama" -ForegroundColor Cyan
-                Write-Host "     * Retry manually:" -ForegroundColor White
-                Write-Host "       docker exec -it ollama ollama pull $model" -ForegroundColor Cyan
-                Write-Host ""
-                Write-Host "  >> You can continue and download models later." -ForegroundColor Cyan
+
+                try {
+                    docker exec -it ollama ollama pull $model
+                    if ($LASTEXITCODE -eq 0) {
+                        Write-Host ""
+                        Write-Status "Model '$model' downloaded successfully!" "SUCCESS"
+                        $successCount++
+                    } else {
+                        Write-Host ""
+                        Write-Status "Model '$model' download may have failed (exit code: $LASTEXITCODE)" "WARNING"
+                        $failCount++
+                        Write-Host ""
+                        Write-Host "  >> Verify download with:" -ForegroundColor Yellow
+                        Write-Host "     docker exec -it ollama ollama list" -ForegroundColor Cyan
+                        Write-Host "  >> Retry download with:" -ForegroundColor Yellow
+                        Write-Host "     docker exec -it ollama ollama pull $model" -ForegroundColor Cyan
+                    }
+                } catch {
+                    Write-Host ""
+                    Write-Status "Failed to download model '$model'." "ERROR"
+                    $failCount++
+                    Write-Host ""
+                    Write-Host "  >> Troubleshooting:" -ForegroundColor Yellow
+                    Write-Host "     * Check internet connection" -ForegroundColor White
+                    Write-Host "     * Verify Ollama container is running:" -ForegroundColor White
+                    Write-Host "       docker ps | findstr ollama" -ForegroundColor Cyan
+                    Write-Host "     * Check Ollama logs:" -ForegroundColor White
+                    Write-Host "       docker logs ollama" -ForegroundColor Cyan
+                    Write-Host "     * Retry manually:" -ForegroundColor White
+                    Write-Host "       docker exec -it ollama ollama pull $model" -ForegroundColor Cyan
+                    Write-Host ""
+                }
             }
         }
+        
+        # Summary for multiple models
+        if ($models.Count -gt 1) {
+            Write-Host ""
+            Write-Host "  Model Download Summary:" -ForegroundColor Cyan
+            Write-Host "    ✓ Successful: $successCount" -ForegroundColor Green
+            if ($failCount -gt 0) {
+                Write-Host "    ✗ Failed: $failCount" -ForegroundColor Red
+            }
+        }
+        
+        Write-Host ""
+        Write-Host "  >> You can download additional models later with:" -ForegroundColor Cyan
+        Write-Host "     docker exec -it ollama ollama pull <model-name>" -ForegroundColor DarkGray
     }
 }
 

@@ -82,7 +82,10 @@ demos/
 │   ├── SPECS_SUMMARY.md              # Quick spec comparison
 │   ├── TROUBLESHOOTING.md            # Common issues
 │   ├── ADVANCED.md                   # Advanced topics
-│   └── DATA_POLICY.md                # Data measurement policy
+│   ├── DATA_POLICY.md                # Data measurement policy
+│   ├── DATABASE_QUERIES.md           # PostgreSQL query examples for n8n
+│   └── n8n/
+│       └── CONFIG.md                 # n8n configuration reference (vendor docs)
 ├── workflows/
 │   ├── README.md                     # Workflow documentation
 │   ├── 01-hello-world.json           # Basic n8n work flow

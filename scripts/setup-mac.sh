@@ -287,25 +287,25 @@ echo ""
 echo "═══════════════════════════════════════════════════════"
 echo ""
 
-# Optional: pull a model when PULL_MODEL=1
-if [[ "${PULL_MODEL:-0}" == "1" ]]; then
-  MODEL_TO_PULL="${MODEL:-llama3.2}"
-
-  info "Checking for existing Ollama models..."
-
-  # Determine ollama command (container or host)
-  if [[ "${USE_HOST_OLLAMA:-0}" == "1" ]] && have ollama; then
-    OLLAMA_CMD=(ollama)
+# Determine ollama command (container or host)
+if [[ "${USE_HOST_OLLAMA:-0}" == "1" ]] && have ollama; then
+  OLLAMA_CMD=(ollama)
+else
+  if docker ps --format '{{.Names}}' | grep -q '^ollama$'; then
+    OLLAMA_CMD=(docker exec ollama ollama)
   else
-    if docker ps --format '{{.Names}}' | grep -q '^ollama$'; then
-      OLLAMA_CMD=(docker exec ollama ollama)
-    else
-      warn "Ollama container not running. Skipping model download."
-      OLLAMA_CMD=()
-    fi
+    warn "Ollama container not running. Skipping model download."
+    OLLAMA_CMD=()
   fi
+fi
 
-  if [[ ${#OLLAMA_CMD[@]} -gt 0 ]]; then
+# Interactive model download (default) or automated via PULL_MODEL env var
+if [[ ${#OLLAMA_CMD[@]} -gt 0 ]]; then
+  # Check if running in automated mode
+  if [[ "${PULL_MODEL:-}" == "1" ]]; then
+    # Automated mode - use MODEL env var
+    MODEL_TO_PULL="${MODEL:-llama3.2}"
+    info "Checking for existing Ollama models..."
     EXISTING_MODELS=$("${OLLAMA_CMD[@]}" list 2>/dev/null || echo "")
 
     if echo "$EXISTING_MODELS" | grep -q "$MODEL_TO_PULL"; then
@@ -321,22 +321,109 @@ if [[ "${PULL_MODEL:-0}" == "1" ]]; then
       else
         err "Model pull failed"
         echo ""
-        echo "Troubleshooting:"
-        echo "  • Check internet connection"
-        echo "  • Verify Ollama is running:"
-        if [[ "${USE_HOST_OLLAMA:-0}" == "1" ]]; then
-          echo "    ollama list"
-        else
-          echo "    docker ps | grep ollama"
-        fi
-        echo "  • Try downloading manually:"
-        if [[ "${USE_HOST_OLLAMA:-0}" == "1" ]]; then
-          echo "    ollama pull $MODEL_TO_PULL"
-        else
-          echo "    docker exec -it ollama ollama pull $MODEL_TO_PULL"
-        fi
-        echo ""
         warn "You can continue and download models later."
+      fi
+    fi
+  else
+    # Interactive mode - prompt user
+    echo "⚠️  Would you like to download an Ollama model? (Y/n) [default: Yes]"
+    read -r download_choice
+    
+    if [[ "$download_choice" == "" || "$download_choice" =~ ^[Yy]$ ]]; then
+      echo ""
+      info "Checking for existing Ollama models..."
+      EXISTING_MODELS=$("${OLLAMA_CMD[@]}" list 2>/dev/null || echo "")
+      
+      if [[ -n "$EXISTING_MODELS" ]]; then
+        echo ""
+        echo "Currently installed models:"
+        echo "$EXISTING_MODELS"
+        echo ""
+      fi
+      
+      echo "  >> Select a model to download:"
+      echo "     1. llama3.2:1b  (1GB)  - Fast, recommended for testing"
+      echo "     2. llama3.2     (4GB)  - Balanced, recommended for workshop"
+      echo "     3. mistral      (4GB)  - Good for coding tasks"
+      echo "     4. All models   (9GB)  - Download all three (⚠️  takes longest, 15-30 min)"
+      echo "     5. Skip for now"
+      echo ""
+      read -p "Enter choice (1-5): " model_choice
+      
+      case "$model_choice" in
+        1) MODELS_TO_PULL=("llama3.2:1b") ;;
+        2) MODELS_TO_PULL=("llama3.2") ;;
+        3) MODELS_TO_PULL=("mistral") ;;
+        4) MODELS_TO_PULL=("llama3.2:1b" "llama3.2" "mistral") ;;
+        *) MODELS_TO_PULL=() ;;
+      esac
+      
+      if [[ ${#MODELS_TO_PULL[@]} -gt 0 ]]; then
+        echo ""
+        if [[ ${#MODELS_TO_PULL[@]} -gt 1 ]]; then
+          info "Downloading ${#MODELS_TO_PULL[@]} models... This will take 15-30 minutes."
+          echo "   >> Total size: ~9GB. Please be patient..."
+        fi
+        
+        success_count=0
+        fail_count=0
+        
+        for model in "${MODELS_TO_PULL[@]}"; do
+          # Check if model already exists
+          if echo "$EXISTING_MODELS" | grep -q "$model"; then
+            ok "Model '$model' is already downloaded. Skipping."
+            ((success_count++))
+          else
+            echo ""
+            info "Downloading '$model'... This may take 2-10 minutes depending on your connection."
+            if [[ ${#MODELS_TO_PULL[@]} -eq 1 ]]; then
+              echo "   >> Model size and download time varies. Please be patient..."
+              echo "   >> After download completes, the model will be validated/extracted (may take 1-2 min)"
+            fi
+            echo ""
+            
+            if "${OLLAMA_CMD[@]}" pull "$model"; then
+              echo ""
+              ok "Model '$model' downloaded successfully!"
+              ((success_count++))
+            else
+              echo ""
+              err "Model '$model' download failed"
+              ((fail_count++))
+              echo ""
+              echo "  >> Verify download with:"
+              if [[ "${USE_HOST_OLLAMA:-0}" == "1" ]]; then
+                echo "     ollama list"
+              else
+                echo "     docker exec -it ollama ollama list"
+              fi
+              echo "  >> Retry download with:"
+              if [[ "${USE_HOST_OLLAMA:-0}" == "1" ]]; then
+                echo "     ollama pull $model"
+              else
+                echo "     docker exec -it ollama ollama pull $model"
+              fi
+            fi
+          fi
+        done
+        
+        # Summary for multiple models
+        if [[ ${#MODELS_TO_PULL[@]} -gt 1 ]]; then
+          echo ""
+          echo "  Model Download Summary:"
+          echo "    ✓ Successful: $success_count"
+          if [[ $fail_count -gt 0 ]]; then
+            echo "    ✗ Failed: $fail_count"
+          fi
+        fi
+        
+        echo ""
+        echo "  >> You can download additional models later with:"
+        if [[ "${USE_HOST_OLLAMA:-0}" == "1" ]]; then
+          echo "     ollama pull <model-name>"
+        else
+          echo "     docker exec -it ollama ollama pull <model-name>"
+        fi
       fi
     fi
   fi
