@@ -21,10 +21,10 @@ ok() { printf "\033[1;32m[ok]\033[0m %s\n" "$*"; }
 warn() { printf "\033[1;33m[warn]\033[0m %s\n" "$*"; }
 err() { printf "\033[1;31m[error]\033[0m %s\n" "$*"; }
 
-echo "═══════════════════════════════════════════════════════"
+echo "======================================================="
 echo "   n8n Workshop - Automated Setup Script v1.1.1"
 echo "   Go to Agentic Conference 2025"
-echo "═══════════════════════════════════════════════════════"
+echo "======================================================="
 echo ""
 
 # Check Docker CLI exists
@@ -87,7 +87,7 @@ cd "$ROOT_DIR"
 
 info "Working directory: $ROOT_DIR"
 echo ""
-echo "═══════════════════════════════════════════════════════"
+echo "======================================================="
 echo ""
 
 # Copy configs if not present in repo root
@@ -179,7 +179,7 @@ else
   # Start containers
   info "Starting services with Docker Compose"
   echo ""
-  echo "⚠️  IMPORTANT: First-time setup will download Docker images"
+  echo "[!] IMPORTANT: First-time setup will download Docker images"
   echo "   - Total download size: ~4-5 GB (ollama, n8n, open-webui, postgres)"
   echo "   - Download time: 5-15 minutes depending on your internet speed"
   echo "   - After download completes, Docker will VERIFY/EXTRACT the images"
@@ -250,14 +250,14 @@ else
     while [ $elapsed -lt $max_wait ]; do
       health=$(docker inspect --format='{{.State.Health.Status}}' "$container_name" 2>/dev/null || echo "")
       if [[ "$health" == "healthy" ]]; then
-        echo " ✓"
+        echo " [OK]"
         break
       fi
 
       # Check if container is running (some containers don't have healthchecks)
       running=$(docker inspect --format='{{.State.Running}}' "$container_name" 2>/dev/null || echo "false")
       if [[ "$running" == "true" && -z "$health" ]]; then
-        echo " ✓ (running)"
+        echo " [OK] (running)"
         break
       fi
 
@@ -271,7 +271,7 @@ else
     done
 
     if [ $elapsed -ge $max_wait ]; then
-      echo " ✗ (timeout)"
+      echo " [X] (timeout)"
       warn "Container '$container_name' did not become healthy within ${max_wait}s"
       warn "It may still be initializing. Check with: docker-compose ps"
     fi
@@ -284,7 +284,7 @@ info "Container Status:"
 "${COMPOSE[@]}" ps
 
 echo ""
-echo "═══════════════════════════════════════════════════════"
+echo "======================================================="
 echo ""
 
 # Determine ollama command (container or host)
@@ -326,7 +326,7 @@ if [[ ${#OLLAMA_CMD[@]} -gt 0 ]]; then
     fi
   else
     # Interactive mode - prompt user
-    echo "⚠️  Would you like to download an Ollama model? (Y/n) [default: Yes]"
+    echo "[!] Would you like to download an Ollama model? (Y/n) [default: Yes]"
     read -r download_choice
     
     if [[ "$download_choice" == "" || "$download_choice" =~ ^[Yy]$ ]]; then
@@ -345,7 +345,7 @@ if [[ ${#OLLAMA_CMD[@]} -gt 0 ]]; then
       echo "     1. llama3.2:1b  (1GB)  - Fast, recommended for testing"
       echo "     2. llama3.2     (4GB)  - Balanced, recommended for workshop"
       echo "     3. mistral      (4GB)  - Good for coding tasks"
-      echo "     4. All models   (9GB)  - Download all three (⚠️  takes longest, 15-30 min)"
+      echo "     4. All models   (9GB)  - Download all three ([!] takes longest, 15-30 min)"
       echo "     5. Skip for now"
       echo ""
       read -p "Enter choice (1-5): " model_choice
@@ -411,9 +411,9 @@ if [[ ${#OLLAMA_CMD[@]} -gt 0 ]]; then
         if [[ ${#MODELS_TO_PULL[@]} -gt 1 ]]; then
           echo ""
           echo "  Model Download Summary:"
-          echo "    ✓ Successful: $success_count"
+          echo "    [OK] Successful: $success_count"
           if [[ $fail_count -gt 0 ]]; then
-            echo "    ✗ Failed: $fail_count"
+            echo "    [X] Failed: $fail_count"
           fi
         fi
         
@@ -430,13 +430,13 @@ if [[ ${#OLLAMA_CMD[@]} -gt 0 ]]; then
 fi
 
 echo ""
-echo "═══════════════════════════════════════════════════════"
+echo "======================================================="
 echo "   Setup Summary"
-echo "═══════════════════════════════════════════════════════"
+echo "======================================================="
 echo ""
 
 # Summary of what was accomplished
-echo "✅ Completed:"
+echo "[OK] Completed:"
 echo "   • Docker verified and running"
 echo "   • Configuration files prepared (.env and docker-compose.yml)"
 
@@ -461,7 +461,7 @@ else
 fi
 
 echo ""
-echo "🔗 Access Your Services:"
+echo "[i] Access Your Services:"
 echo "   • OpenWebUI:  http://localhost:3000  (Chat with LLMs)"
 echo "   • N8N:        http://localhost:5678  (Build workflows)"
 
@@ -472,19 +472,19 @@ else
 fi
 
 echo ""
-echo "📋 Next Steps:"
+echo "[i] Next Steps:"
 echo "   1. Verify installation: ./scripts/verify-mac.sh"
 echo "   2. Open OpenWebUI (http://localhost:3000) and create an account"
 echo "   3. Open N8N (http://localhost:5678) and set up credentials"
 echo "   4. Import sample workflows from ./workflows/"
 echo ""
-echo "📄 Documentation:"
+echo "[i] Documentation:"
 echo "   • Quick Start:     docs/QUICK_START.md"
 echo "   • Configuration:   docs/CONFIGURATION.md"
 echo "   • Troubleshooting: docs/TROUBLESHOOTING.md"
 echo "   • Workflows:       workflows/README.md"
 echo ""
-echo "Happy building! 🚀"
+echo "Happy building!"
 echo ""
 
 if [[ "${ENABLE_LOGGING:-0}" == "1" ]]; then

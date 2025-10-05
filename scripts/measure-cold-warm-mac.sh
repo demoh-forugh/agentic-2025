@@ -51,9 +51,9 @@ fi
 ROOT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")"/.. && pwd)"
 cd "$ROOT_DIR"
 
-echo "═══════════════════════════════════════════════════════"
+echo "======================================================="
 echo "   Cold vs Warm Start Measurement v1.1.1"
-echo "═══════════════════════════════════════════════════════"
+echo "======================================================="
 echo ""
 echo "Model: $MODEL"
 echo "Warm runs: $WARM_RUNS"
@@ -66,9 +66,9 @@ echo ""
 # Check 1: Ollama API is accessible
 printf "Checking Ollama API accessibility..."
 if curl -fsS --max-time 5 "$OLLAMA_HOST/api/tags" >/dev/null 2>&1; then
-  echo " ✓"
+  echo " [OK]"
 else
-  echo " ✗"
+  echo " [X]"
   echo ""
   err "Cannot connect to Ollama at $OLLAMA_HOST"
   echo ""
@@ -88,9 +88,9 @@ fi
 # Check 2: Model exists
 printf "Checking if model '$MODEL' is available..."
 if curl -fsS --max-time 5 "$OLLAMA_HOST/api/tags" 2>/dev/null | jq -e ".models[] | select(.name==\"$MODEL\")" >/dev/null 2>&1; then
-  echo " ✓"
+  echo " [OK]"
 else
-  echo " ✗"
+  echo " [X]"
   echo ""
   err "Model '$MODEL' not found in Ollama"
   echo ""
@@ -112,9 +112,9 @@ fi
 printf "Checking available disk space..."
 FREE_GB=$(df -g . 2>/dev/null | awk 'NR==2 {print $4}' || echo "0")
 if [[ "$FREE_GB" =~ ^[0-9]+$ ]] && [ "$FREE_GB" -lt 5 ]; then
-  echo " ⚠ Low (${FREE_GB}GB free)"
+  echo " [!] Low (${FREE_GB}GB free)"
 elif [[ "$FREE_GB" =~ ^[0-9]+$ ]] && [ "$FREE_GB" -ge 5 ]; then
-  echo " ✓ (${FREE_GB}GB free)"
+  echo " [OK] (${FREE_GB}GB free)"
 else
   echo " ?"
 fi

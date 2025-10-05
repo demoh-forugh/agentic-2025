@@ -470,7 +470,7 @@ if ($downloadModel -eq "" -or $downloadModel -eq "Y" -or $downloadModel -eq "y")
     Write-Host "     1. llama3.2:1b  (1GB)  - Fast, recommended for testing" -ForegroundColor White
     Write-Host "     2. llama3.2     (4GB)  - Balanced, recommended for workshop" -ForegroundColor White
     Write-Host "     3. mistral      (4GB)  - Good for coding tasks" -ForegroundColor White
-    Write-Host "     4. All models   (9GB)  - Download all three (⚠️  takes longest, 15-30 min)" -ForegroundColor Cyan
+    Write-Host "     4. All models   (9GB)  - Download all three ([!] takes longest, 15-30 min)" -ForegroundColor Cyan
     Write-Host "     5. Skip for now" -ForegroundColor DarkGray
     Write-Host ""
 
@@ -556,9 +556,9 @@ if ($downloadModel -eq "" -or $downloadModel -eq "Y" -or $downloadModel -eq "y")
         if ($models.Count -gt 1) {
             Write-Host ""
             Write-Host "  Model Download Summary:" -ForegroundColor Cyan
-            Write-Host "    ✓ Successful: $successCount" -ForegroundColor Green
+            Write-Host "    [OK] Successful: $successCount" -ForegroundColor Green
             if ($failCount -gt 0) {
-                Write-Host "    ✗ Failed: $failCount" -ForegroundColor Red
+                Write-Host "    [X] Failed: $failCount" -ForegroundColor Red
             }
         }
         

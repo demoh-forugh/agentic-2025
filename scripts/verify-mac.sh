@@ -13,9 +13,9 @@ ok() { printf "\033[1;32m[ok]\033[0m %s\n" "$*"; }
 warn() { printf "\033[1;33m[warn]\033[0m %s\n" "$*"; }
 err() { printf "\033[1;31m[error]\033[0m %s\n" "$*"; }
 
-echo "═══════════════════════════════════════════════════════"
+echo "======================================================="
 echo "   Installation Verification v1.1.1"
-echo "═══════════════════════════════════════════════════════"
+echo "======================================================="
 echo ""
 
 all_good=true
@@ -140,7 +140,7 @@ if curl -fsS http://localhost:11434/api/tags >/dev/null 2>&1; then
   if have jq; then
     model_count=$(curl -fsS http://localhost:11434/api/tags 2>/dev/null | jq -r '.models | length' 2>/dev/null || echo "0")
     if [[ "$model_count" -gt 0 ]]; then
-      echo "  → Models available: $model_count"
+      echo "  -> Models available: $model_count"
       curl -fsS http://localhost:11434/api/tags 2>/dev/null | jq -r '.models[].name' 2>/dev/null | while read -r model; do
         echo "    • $model"
       done
@@ -221,84 +221,84 @@ echo "$docker_stats"
 
 # Summary with prioritized troubleshooting
 echo ""
-echo "═══════════════════════════════════════════════════════"
+echo "======================================================="
 
 if [[ "$all_good" == "true" ]]; then
-  echo "   All checks passed! ✓"
-  echo "═══════════════════════════════════════════════════════"
+  echo "   All checks passed! [OK]"
+  echo "======================================================="
   echo ""
   echo "Your workshop environment is ready!"
   echo ""
-  echo "🔗 Access your services:"
+  echo "[i] Access your services:"
   echo "  • OpenWebUI:  http://localhost:3000  (Chat with LLMs)"
   echo "  • n8n:        http://localhost:5678  (Build workflows)"
   echo "  • Ollama API: http://localhost:11434 (LLM API endpoint)"
   echo ""
-  echo "📋 Next steps:"
+  echo "[i] Next steps:"
   echo "  1. Configure Google API credentials (see docs/CONFIGURATION.md)"
   echo "  2. Import sample workflows from ./workflows/"
   echo "  3. Start building your agents!"
   echo ""
 else
-  echo "   Some checks failed ✗"
-  echo "═══════════════════════════════════════════════════════"
+  echo "   Some checks failed [X]"
+  echo "======================================================="
   echo ""
 
   # Prioritized troubleshooting based on what failed
   if [[ ${#critical_failures[@]} -gt 0 ]]; then
-    echo "🔴 CRITICAL ISSUES (fix these first):"
+    echo "[!] CRITICAL ISSUES (fix these first):"
     echo ""
 
     # Priority 1: Docker daemon not running
     if printf '%s\n' "${critical_failures[@]}" | grep -q "Docker daemon"; then
       echo "1. Docker daemon is not running"
-      echo "   → Start Docker Desktop from Applications folder"
-      echo "   → Wait 30-60 seconds for Docker to fully initialize"
-      echo "   → Look for Docker whale icon in menu bar"
-      echo "   → If issues persist, restart your Mac"
+      echo "   -> Start Docker Desktop from Applications folder"
+      echo "   -> Wait 30-60 seconds for Docker to fully initialize"
+      echo "   -> Look for Docker whale icon in menu bar"
+      echo "   -> If issues persist, restart your Mac"
       echo ""
     fi
 
     # Priority 2: Containers not running
     if [[ ${#stopped_containers[@]} -gt 0 ]]; then
       echo "2. Containers exist but are stopped: ${stopped_containers[*]}"
-      echo "   → Start them with: docker start ${stopped_containers[*]}"
-      echo "   → Or restart all services: docker-compose restart"
+      echo "   -> Start them with: docker start ${stopped_containers[*]}"
+      echo "   -> Or restart all services: docker-compose restart"
       echo ""
     fi
 
     if [[ ${#missing_containers[@]} -gt 0 ]]; then
       echo "2. Containers are missing: ${missing_containers[*]}"
-      echo "   → Run setup script: ./scripts/setup-mac.sh"
-      echo "   → Or manually start: docker-compose up -d"
+      echo "   -> Run setup script: ./scripts/setup-mac.sh"
+      echo "   -> Or manually start: docker-compose up -d"
       echo ""
     fi
 
     # Priority 3: Ports not accessible
     if printf '%s\n' "${critical_failures[@]}" | grep -q "Port.*NOT"; then
       echo "3. Some services are not accessible on their ports"
-      echo "   → Check for port conflicts:"
+      echo "   -> Check for port conflicts:"
       echo "     lsof -iTCP:5678,3000,11434,5432 -sTCP:LISTEN"
-      echo "   → Check container logs:"
+      echo "   -> Check container logs:"
       echo "     docker-compose logs [service-name]"
-      echo "   → Restart containers: docker-compose restart"
+      echo "   -> Restart containers: docker-compose restart"
       echo ""
     fi
 
     # Priority 4: HTTP endpoints failing
     if printf '%s\n' "${critical_failures[@]}" | grep -q "NOT accessible"; then
       echo "4. HTTP endpoints are not responding"
-      echo "   → Containers may still be initializing (wait 30s and retry)"
-      echo "   → Check container logs for errors:"
+      echo "   -> Containers may still be initializing (wait 30s and retry)"
+      echo "   -> Check container logs for errors:"
       echo "     docker-compose logs -f"
-      echo "   → Verify containers are healthy:"
+      echo "   -> Verify containers are healthy:"
       echo "     docker ps"
       echo ""
     fi
   fi
 
   if [[ ${#warnings[@]} -gt 0 ]]; then
-    echo "🟡 WARNINGS (non-critical):"
+    echo "[!] WARNINGS (non-critical):"
     echo ""
     for warning in "${warnings[@]}"; do
       echo "  • $warning"
@@ -306,7 +306,7 @@ else
     echo ""
   fi
 
-  echo "📄 Additional Help:"
+  echo "[i] Additional Help:"
   echo "  • Troubleshooting guide: docs/TROUBLESHOOTING.md"
   echo "  • Check logs: docker-compose logs -f"
   echo "  • View container status: docker-compose ps"
