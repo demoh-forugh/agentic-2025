@@ -246,6 +246,12 @@ docker exec -it ollama ollama pull llama3.2
 curl http://localhost:11434/api/tags       # Ollama API
 curl http://localhost:5678/healthz         # n8n
 open http://localhost:3000/                # OpenWebUI (opens default browser)
+
+# 5) Create Ollama credential inside n8n (first run)
+#    - Open http://localhost:5678 and import any workflow using the Ollama node
+#    - Click the "Ollama Chat Model" node warning → "Credential to connect with" → "Create New Credential"
+#    - Change Base URL from http://localhost:11434 to http://ollama:11434 (Docker container hostname)
+#    - Click "Save"; the credential test should go green when the connection succeeds
 ```
 
 ### Access URLs (same as Windows)

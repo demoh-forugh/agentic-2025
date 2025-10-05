@@ -215,19 +215,15 @@ docker exec -it ollama ollama list
    - You'll see the "Ollama Chat Model" node has a credential warning
    - Click the node, then click **"Credential to connect with"** dropdown
    - Select **"Create New Credential"**
-   - The **Base URL is automatically pre-filled** with `http://ollama:11434` (read-only)
-   - Click **"Save"** - that's it! ✅
+   - Change **Base URL** from `http://localhost:11434` to **`http://ollama:11434`**
+   - Click **"Save"** (n8n will test the connection and the indicator should turn green)
 8. Click **"Execute Workflow"** button in the top toolbar
 9. View the output in the **"Format Response"** node - see your LLM respond! 🎉
 
-**Why is setup so easy?**
-The docker-compose.yml uses `CREDENTIALS_OVERWRITE_DATA_FILE` to automatically pre-fill credential values. When you create new credentials, all connection details are already configured correctly:
-- **Ollama API**: `http://ollama:11434` (not localhost!)
-- **PostgreSQL**: `postgres:5432` with database `workshop_db`, user `workshop`
+**Why `http://ollama:11434`?**
+All containers communicate using service names on the shared Docker network (`ai-network`). Using the container name `ollama` ensures n8n reaches the Ollama service running in Docker.
 
-All containers communicate using service names as hostnames on the shared Docker network (`ai-network`).
-
-**Important:** You only need to create each credential type once. After that, all workflows automatically see and use the same credentials!
+**Keep credentials handy:** You only need to create each credential type once. After that, all workflows automatically see and use the same credentials.
 
 **Example paths to find your workflows:**
 - **Windows**: `C:\Users\YourName\Documents\demos\workflows\01-hello-world.json`
@@ -258,7 +254,7 @@ We've included **6 production-ready workflows** for common business use cases:
 When you import workflows, n8n will prompt you to create credentials. The connection details are **automatically pre-filled** for you:
 
 **Ollama API** (all workflows use this):
-- Base URL: `http://ollama:11434` ← Pre-filled, just click Save!
+- Set Base URL to `http://ollama:11434` (update from the default `http://localhost:11434` before saving)
 
 **PostgreSQL** (workflows 05 & 06):
 - Host: `postgres` ← Pre-filled
