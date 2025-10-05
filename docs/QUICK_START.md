@@ -484,7 +484,7 @@ docker-compose restart ollama
 2. Verify `configs/n8n-credentials-overwrite.json` has the correct credential type name:
    ```json
    {
-     "lmChatOllama": {
+     "ollamaApi": {
        "baseUrl": "http://ollama:11434"
      }
    }
@@ -497,7 +497,7 @@ docker-compose restart ollama
 - Credential overwrites only affect **NEW** credential creation
 - You must **restart n8n** after changing the overwrite file
 - You do **NOT** need to delete Docker volumes
-- The credential type name must be `lmChatOllama` (not `ollamaApi`)
+- The credential type name must be `ollamaApi` (check your workflow JSON to confirm)
 
 ### n8n can't connect to Ollama
 

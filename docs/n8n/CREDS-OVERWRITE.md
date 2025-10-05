@@ -19,16 +19,32 @@
 The keys in your credential overwrite JSON **must match n8n's internal credential type names exactly**. These are NOT the same as node type names!
 
 **Common Mistakes:**
-- ❌ `"ollamaApi"` - This is wrong (old credential type)
-- ✅ `"lmChatOllama"` - This is correct (LangChain Ollama credential)
+- ❌ `"lmChatOllama"` - This is the node type, not the credential type
+- ✅ `"ollamaApi"` - This is correct (what the node actually uses)
 - ❌ `"postgresDb"` - This is wrong
 - ✅ `"postgres"` - This is correct
 
 **How to Find the Correct Credential Type Name:**
-1. In n8n UI, go to **Settings** → **Credentials**
+
+**Method 1: Check the workflow JSON**
+Look for the `credentials` section in your node:
+```json
+"credentials": {
+  "ollamaApi": {           ← This is the credential type name
+    "id": "...",
+    "name": "Ollama account"
+  }
+}
+```
+
+**Method 2: Check n8n UI**
+1. Go to **Settings** → **Credentials**
 2. Click **"Add Credential"**
-3. The credential type name is shown in the URL: `/credentials/new/[CREDENTIAL_TYPE_NAME]`
-4. Or inspect the node's credential configuration in the workflow JSON
+3. Search for the credential you need
+4. The credential type name is shown in the URL: `/credentials/new/[CREDENTIAL_TYPE_NAME]`
+
+**Method 3: Check n8n logs**
+When credential overwrite fails, n8n logs will show the credential type it's looking for.
 
 ### 🔄 When Changes Take Effect
 
