@@ -117,6 +117,8 @@ Create your workflow automation account:
 4. Click "Get started"
 5. You'll see the workflow canvas ✅
 
+**Note:** n8n is pre-configured to work with Safari and non-HTTPS URLs. The setup automatically sets `N8N_SECURE_COOKIE=false` for local development.
+
 #### 3. Import Your First Workflow (5 minutes)
 
 Test Ollama integration with the Hello World workflow using n8n's built-in import feature:
@@ -247,9 +249,12 @@ chmod +x ./scripts/setup-mac.sh ./scripts/verify-mac.sh
 - ✓ Detects your system specs (RAM, CPU, GPU)
 - ✓ Recommends the optimal model for your hardware
 - ✓ Checks if Docker is running
+- ✓ Automatically handles Docker authentication (logs out if needed for public images)
 - ✓ Starts all containers (ollama, n8n, open-webui, postgres) with health checks
+- ✓ Pre-configures n8n for Safari and local development (`N8N_SECURE_COOKIE=false`)
 - ✓ Optionally downloads an LLM model
 - ✓ Provides troubleshooting if anything fails
+- ✓ Enhanced color-coded output for better readability
 
 **Optional: Enable detailed logging**
 ```bash
@@ -381,9 +386,41 @@ If ports 3000, 5678, or 11434 are already in use:
 3. Restart: `docker-compose down && docker-compose up -d`
 
 ### Models won't download
+
+**Authentication Error:** "authentication required - email must be verified"
+
+This happens when you're logged into Docker Hub with an unverified account. The setup script automatically handles this by logging you out before pulling public images.
+
+If you encounter this error:
+```bash
+docker logout
+./scripts/setup-mac.sh  # Re-run setup
+```
+
+**Other issues:**
 - Check internet connection
 - Ensure Docker has network access
 - Try a smaller model first
+
+### Docker daemon not running (macOS)
+
+**Error:** "Cannot connect to Docker daemon" or daemon shows errors
+
+**Common causes and fixes:**
+
+1. **Symlink loop in Docker data directory:**
+   - This can happen if you tried to change Docker's disk location
+   - The setup script will detect this and help resolve it
+   - Docker will recreate the disk image automatically
+
+2. **Docker Desktop not started:**
+   - Open Docker Desktop from Applications
+   - Wait for the whale icon in menu bar to show "Docker Desktop is running"
+
+3. **Insufficient disk space:**
+   - Check available space: `df -h`
+   - Docker needs at least 20GB free for the workshop
+   - If using an external disk, ensure it's mounted
 
 ### n8n can't connect to Ollama
 
@@ -403,6 +440,22 @@ If ports 3000, 5678, or 11434 are already in use:
 5. Click **Save** and retry the workflow
 
 **Technical Explanation:** Docker containers use service names (defined in docker-compose.yml) as hostnames. The Ollama service is named `ollama`, so n8n must use `http://ollama:11434` to reach it on the shared `ai-network`.
+
+### n8n shows "secure cookie" warning on Safari
+
+**Error:** "Your n8n server is configured to use a secure cookie..."
+
+This issue has been **automatically fixed** in the setup. The docker-compose.yml now sets `N8N_SECURE_COOKIE=false` by default for local development.
+
+If you still see this error:
+1. Ensure you ran the latest setup script
+2. Check that `.env` file contains: `N8N_SECURE_COOKIE=false`
+3. Recreate the n8n container:
+   ```bash
+   docker compose up -d n8n
+   ```
+
+**For production deployments:** Set `N8N_SECURE_COOKIE=true` and use HTTPS/TLS.
 
 For more issues, see [TROUBLESHOOTING.md](./TROUBLESHOOTING.md)
 

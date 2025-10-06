@@ -73,9 +73,11 @@ ENABLE_LOGGING=1 ./scripts/setup-mac.sh
 - ✓ Check prerequisites (Docker, disk space, network)
 - ✓ **Detect system specs** (RAM, CPU cores, GPU) and recommend optimal model
 - ✓ Detect already-running containers (won't restart unnecessarily)
+- ✓ Automatically handle Docker authentication issues (logout if needed for public images)
 - ✓ Start Docker containers with health checks
 - ✓ Download an LLM model (optional, skips if already present)
 - ✓ Provide detailed troubleshooting if anything fails
+- ✓ **Enhanced visual output** with color-coded status messages and emojis for easy reading
 
 **Key Features:**
 - **Smart Model Recommendations**: Analyzes your RAM, CPU, and GPU to suggest the right model
@@ -217,6 +219,8 @@ docker exec -it ollama ollama list
 3. Enter your email and password
 4. Click "**Get started**"
 5. You'll see the workflow canvas - you're ready to build! ✅
+
+**Note:** n8n is pre-configured to work with Safari and non-HTTPS URLs (`N8N_SECURE_COOKIE=false`). This is safe for local development.
 
 ### 3. Import Your First Workflow (5 minutes)
 

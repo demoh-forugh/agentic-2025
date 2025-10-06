@@ -43,11 +43,11 @@ For detailed value proposition and cost analysis, see [Workshop Goals](./docs/GO
 ## 📋 Prerequisites
 
 ### Recommended Specifications
-- **OS**: Windows 10/11 with WSL2 enabled
+- **OS**: Windows 10/11 with WSL2 enabled, or macOS 12.0+ (Monterey)
 - **RAM**: 16GB+ (8GB minimum)
 - **Storage**: 20GB free disk space
 - **CPU**: 4+ cores
-- **GPU**: Optional (NVIDIA for acceleration)
+- **GPU**: Optional (NVIDIA for Windows, Apple Silicon/Metal for macOS)
 - **Internet**: Required for initial setup
 - **Skills**: Basic familiarity with command line
 - **Account**: Google account for API integration demos
