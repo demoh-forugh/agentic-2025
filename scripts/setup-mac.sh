@@ -16,10 +16,20 @@ fi
 
 have() { command -v "$1" >/dev/null 2>&1; }
 
-info() { printf "\033[1;36m[info]\033[0m %s\n" "$*"; }
-ok() { printf "\033[1;32m[ok]\033[0m %s\n" "$*"; }
-warn() { printf "\033[1;33m[warn]\033[0m %s\n" "$*"; }
-err() { printf "\033[1;31m[error]\033[0m %s\n" "$*"; }
+# Color and formatting functions
+info() { printf "\033[1;36m[ℹ️  INFO]\033[0m %s\n" "$*"; }
+ok() { printf "\033[1;32m[✓ OK]\033[0m %s\n" "$*"; }
+warn() { printf "\033[1;33m[⚠️  WARN]\033[0m %s\n" "$*"; }
+err() { printf "\033[1;31m[✗ ERROR]\033[0m %s\n" "$*"; }
+step() { printf "\033[1;35m[→]\033[0m \033[1m%s\033[0m\n" "$*"; }
+success() { printf "\033[1;32m%s\033[0m\n" "$*"; }
+highlight() { printf "\033[1;33m%s\033[0m" "$*"; }
+bold() { printf "\033[1m%s\033[0m" "$*"; }
+dim() { printf "\033[2m%s\033[0m" "$*"; }
+
+# Separator functions
+separator() { printf "\033[1;34m%s\033[0m\n" "═══════════════════════════════════════════════════════"; }
+line() { printf "\033[0;90m%s\033[0m\n" "───────────────────────────────────────────────────────"; }
 
 # Function to detect system specifications
 detect_system_specs() {
@@ -89,23 +99,26 @@ detect_system_specs() {
   fi
 }
 
-echo "======================================================="
-echo "   n8n Workshop - Automated Setup Script v1.1.1"
-echo "   Go to Agentic Conference 2025"
-echo "======================================================="
+echo ""
+separator
+printf "\033[1;36m   🚀 n8n Workshop - Automated Setup Script v1.1.1\033[0m\n"
+printf "\033[1;37m   Go to Agentic Conference 2025\033[0m\n"
+separator
 echo ""
 
 # Check Docker CLI exists
+step "Checking Docker installation..."
 if ! have docker; then
   err "Docker not found."
   echo ""
-  echo "Installation instructions:"
-  echo "  1. Download Docker Desktop for Mac:"
-  echo "     https://www.docker.com/products/docker-desktop/"
-  echo "  2. Install the downloaded .dmg file"
-  echo "  3. Start Docker Desktop from Applications"
-  echo "  4. Wait for Docker to initialize (whale icon in menu bar)"
-  echo "  5. Re-run this script"
+  printf "\033[1;33m📦 Installation instructions:\033[0m\n"
+  echo ""
+  printf "  \033[1m1.\033[0m Download Docker Desktop for Mac:\n"
+  printf "     \033[4;36mhttps://www.docker.com/products/docker-desktop/\033[0m\n"
+  printf "  \033[1m2.\033[0m Install the downloaded .dmg file\n"
+  printf "  \033[1m3.\033[0m Start Docker Desktop from Applications\n"
+  printf "  \033[1m4.\033[0m Wait for Docker to initialize (🐳 whale icon in menu bar)\n"
+  printf "  \033[1m5.\033[0m Re-run this script\n"
   echo ""
   exit 1
 fi
@@ -113,15 +126,17 @@ fi
 ok "Docker is installed: $(docker --version)"
 
 # Check Docker daemon is running
+step "Checking Docker daemon..."
 if ! docker ps >/dev/null 2>&1; then
   err "Docker daemon is not running."
   echo ""
-  echo "Troubleshooting steps:"
-  echo "  1. Start Docker Desktop from Applications folder"
-  echo "  2. Wait 30-60 seconds for Docker to fully initialize"
-  echo "  3. Look for Docker whale icon in menu bar (should not show errors)"
-  echo "  4. If issues persist, restart your Mac"
-  echo "  5. Re-run this script"
+  printf "\033[1;33m🔧 Troubleshooting steps:\033[0m\n"
+  echo ""
+  printf "  \033[1m1.\033[0m Start Docker Desktop from Applications folder\n"
+  printf "  \033[1m2.\033[0m Wait 30-60 seconds for Docker to fully initialize\n"
+  printf "  \033[1m3.\033[0m Look for 🐳 Docker whale icon in menu bar (should not show errors)\n"
+  printf "  \033[1m4.\033[0m If issues persist, restart your Mac\n"
+  printf "  \033[1m5.\033[0m Re-run this script\n"
   echo ""
   exit 1
 fi
@@ -155,37 +170,37 @@ cd "$ROOT_DIR"
 
 info "Working directory: $ROOT_DIR"
 echo ""
-echo "======================================================="
+separator
 echo ""
 
 # Detect system specifications
-info "Detecting system specifications..."
+step "Detecting system specifications..."
 detect_system_specs
 
 echo ""
-echo "  System Specifications:"
+printf "\033[1;36m  💻 System Specifications:\033[0m\n"
 if [[ $(echo "$TOTAL_RAM > 0" | bc -l) -eq 1 ]]; then
-  echo "    RAM:       ${TOTAL_RAM} GB total$(if [[ $(echo "$AVAILABLE_RAM > 0" | bc -l) -eq 1 ]]; then echo ", ${AVAILABLE_RAM} GB available"; fi)"
+  printf "    \033[1;33m🧠 RAM:\033[0m       ${TOTAL_RAM} GB total$(if [[ $(echo "$AVAILABLE_RAM > 0" | bc -l) -eq 1 ]]; then echo ", ${AVAILABLE_RAM} GB available"; fi)\n"
 else
-  echo "    RAM:       Unable to detect"
+  printf "    \033[1;33m🧠 RAM:\033[0m       Unable to detect\n"
 fi
 
 if [[ $CPU_CORES -gt 0 ]]; then
-  echo "    CPU:       $CPU_CORES cores"
+  printf "    \033[1;35m⚡ CPU:\033[0m       $CPU_CORES cores\n"
 else
-  echo "    CPU:       Unable to detect"
+  printf "    \033[1;35m⚡ CPU:\033[0m       Unable to detect\n"
 fi
 
 if [[ "$HAS_GPU" == true ]]; then
-  echo "    GPU:       $GPU_NAME"
+  printf "    \033[1;36m🎮 GPU:\033[0m       $GPU_NAME\n"
 else
-  echo "    GPU:       None detected (CPU-only mode)"
+  printf "    \033[1;36m🎮 GPU:\033[0m       None detected (CPU-only mode)\n"
 fi
 
 echo ""
-echo "  Recommended Model: $RECOMMENDED_MODEL"
+printf "  \033[1;32m✨ Recommended Model:\033[0m \033[1m$RECOMMENDED_MODEL\033[0m\n"
 echo ""
-echo "======================================================="
+separator
 echo ""
 
 # Copy configs if not present in repo root
@@ -274,20 +289,104 @@ if [[ ${#EXISTING_CONTAINERS[@]} -gt 0 ]]; then
     ok "Using existing containers (no changes made)"
   fi
 else
-  # Start containers
-  info "Starting services with Docker Compose"
+  # Start containers - First pull images explicitly
+  step "Preparing to download Docker images"
   echo ""
-  echo "[!] IMPORTANT: First-time setup will download Docker images"
-  echo "   - Total download size: ~4-5 GB (ollama, n8n, open-webui, postgres)"
-  echo "   - Download time: 5-15 minutes depending on your internet speed"
-  echo "   - After download completes, Docker will VERIFY/EXTRACT the images"
-  echo "   - Verification may take 1-3 minutes and will show 'Pulling' status"
-  echo "   - This is normal - please be patient while images are verified!"
+
+  # Logout from Docker Hub to avoid unverified email issues with public images
+  if docker info 2>/dev/null | grep -q "Username:"; then
+    info "Logging out from Docker Hub to pull public images without authentication..."
+    docker logout >/dev/null 2>&1 || true
+    ok "Using unauthenticated access for public images"
+    echo ""
+  fi
+
+  printf "\033[1;33m⚠️  IMPORTANT:\033[0m First-time setup will download Docker images\n"
+  echo ""
+  printf "   \033[1;36m📦 Total download size:\033[0m ~4-5 GB (ollama, n8n, open-webui, postgres)\n"
+  printf "   \033[1;35m⏱️  Download time:\033[0m      5-15 minutes depending on your internet speed\n"
+  printf "   \033[1;33m🔄 Verification:\033[0m        After download, Docker will verify/extract (1-3 min)\n"
+  printf "   \033[1;32m✓  This is normal:\033[0m      Please be patient!\n"
+  echo ""
+
+  # Define images to pull based on configuration
+  if [[ "${USE_HOST_OLLAMA:-0}" == "1" ]] && have ollama; then
+    IMAGES_TO_PULL=(
+      "ghcr.io/open-webui/open-webui:main"
+      "n8nio/n8n:latest"
+      "postgres:15-alpine"
+    )
+    info "Pulling 3 images (using host Ollama)..."
+  else
+    IMAGES_TO_PULL=(
+      "ollama/ollama:latest"
+      "ghcr.io/open-webui/open-webui:main"
+      "n8nio/n8n:latest"
+      "postgres:15-alpine"
+    )
+    info "Pulling 4 images..."
+  fi
+
+  echo ""
+  PULL_SUCCESS=0
+  PULL_FAILED=()
+
+  for image in "${IMAGES_TO_PULL[@]}"; do
+    image_name=$(echo "$image" | cut -d':' -f1 | awk -F'/' '{print $NF}')
+
+    # Check if image already exists locally
+    if docker image inspect "$image" >/dev/null 2>&1; then
+      ok "Image '\033[1;36m$image_name\033[0m' already exists locally (skipping download)"
+      ((PULL_SUCCESS++))
+      continue
+    fi
+
+    printf "\033[1;35m[→]\033[0m Pulling image: \033[1;36m$image\033[0m\n"
+    printf "   \033[2mThis may take 2-10 minutes depending on image size and connection speed...\033[0m\n"
+    echo ""
+
+    # Pull with progress output
+    if docker pull "$image"; then
+      echo ""
+      success "✓ Successfully pulled: $image_name"
+      ((PULL_SUCCESS++))
+    else
+      echo ""
+      err "Failed to pull: $image_name"
+      PULL_FAILED+=("$image")
+    fi
+    echo ""
+  done
+
+  # Summary of pull results
+  separator
+  echo ""
+  if [[ ${#PULL_FAILED[@]} -gt 0 ]]; then
+    err "Image pull failed for ${#PULL_FAILED[@]} image(s):"
+    for failed_image in "${PULL_FAILED[@]}"; do
+      printf "   \033[1;31m✗\033[0m $failed_image\n"
+    done
+    echo ""
+    printf "\033[1;33m🔧 Troubleshooting steps:\033[0m\n"
+    echo ""
+    printf "  \033[1m1.\033[0m Check your internet connection\n"
+    printf "  \033[1m2.\033[0m Check Docker Hub status: \033[4;36mhttps://status.docker.com\033[0m\n"
+    printf "  \033[1m3.\033[0m Try pulling manually: \033[2mdocker pull <image-name>\033[0m\n"
+    printf "  \033[1m4.\033[0m Check disk space: \033[2mdocker system df\033[0m\n"
+    printf "  \033[1m5.\033[0m Restart Docker Desktop and retry this script\n"
+    echo ""
+    exit 1
+  else
+    success "✓ All images pulled successfully ($PULL_SUCCESS/${#IMAGES_TO_PULL[@]})"
+    echo ""
+  fi
+
+  # Now start containers
+  info "Starting services with Docker Compose"
   echo ""
 
   if [[ "${USE_HOST_OLLAMA:-0}" == "1" ]] && have ollama; then
-    # Suppress container logs, only show creation status
-    if "${COMPOSE[@]}" "${compose_args[@]}" up --detach --quiet-pull open-webui n8n postgres 2>&1 | grep -E '^\[|^✔|Container|Network|Volume' || true; then
+    if "${COMPOSE[@]}" "${compose_args[@]}" up --detach open-webui n8n postgres 2>&1 | grep -E '^\[|^✔|Container|Network|Volume|Creating|Starting' || true; then
       echo ""
       ok "Containers started successfully"
       echo "   Containers are running in the background"
@@ -305,8 +404,7 @@ else
       exit 1
     fi
   else
-    # Suppress container logs, only show creation status
-    if "${COMPOSE[@]}" "${compose_args[@]}" up --detach --quiet-pull 2>&1 | grep -E '^\[|^✔|Container|Network|Volume' || true; then
+    if "${COMPOSE[@]}" "${compose_args[@]}" up --detach 2>&1 | grep -E '^\[|^✔|Container|Network|Volume|Creating|Starting' || true; then
       echo ""
       ok "Containers started successfully"
       echo "   Containers are running in the background"
@@ -424,48 +522,48 @@ if [[ ${#OLLAMA_CMD[@]} -gt 0 ]]; then
     fi
   else
     # Interactive mode - prompt user
-    echo "[!] Would you like to download an Ollama model? (Y/n) [default: Yes]"
+    printf "\033[1;33m🤖 Would you like to download an Ollama model?\033[0m (Y/n) [default: Yes]\n"
     read -r download_choice
-    
+
     if [[ "$download_choice" == "" || "$download_choice" =~ ^[Yy]$ ]]; then
       echo ""
-      info "Checking for existing Ollama models..."
+      step "Checking for existing Ollama models..."
       EXISTING_MODELS=$("${OLLAMA_CMD[@]}" list 2>/dev/null || echo "")
-      
+
       if [[ -n "$EXISTING_MODELS" ]]; then
         echo ""
-        echo "Currently installed models:"
+        printf "\033[1;36m📦 Currently installed models:\033[0m\n"
         echo "$EXISTING_MODELS"
         echo ""
       fi
-      
-      echo "  >> Select a model to download:"
-      echo "     Based on your system (${TOTAL_RAM}GB RAM, $CPU_CORES cores$(if [[ "$HAS_GPU" == true ]]; then echo ", GPU"; fi)):"
+
+      printf "\033[1;35m  → Select a model to download:\033[0m\n"
+      printf "     \033[2mBased on your system (${TOTAL_RAM}GB RAM, $CPU_CORES cores$(if [[ "$HAS_GPU" == true ]]; then echo ", GPU"; fi))\033[0m\n"
       echo ""
 
       # Highlight recommended model
       if [[ $RECOMMENDED_CHOICE -eq 1 ]]; then
-        echo "     1. llama3.2:1b  (1GB)  - Fast, works on any system [RECOMMENDED]"
-        echo "     2. llama3.2     (4GB)  - Balanced, recommended for workshop"
-        echo "     3. mistral      (4GB)  - Good for coding tasks"
+        printf "     \033[1;32m1.\033[0m \033[1mllama3.2:1b\033[0m  \033[2m(1GB)\033[0m  - Fast, works on any system \033[1;33m[RECOMMENDED]\033[0m\n"
+        printf "     \033[1;36m2.\033[0m llama3.2     \033[2m(4GB)\033[0m  - Balanced, recommended for workshop\n"
+        printf "     \033[1;36m3.\033[0m mistral      \033[2m(4GB)\033[0m  - Good for coding tasks\n"
       elif [[ $RECOMMENDED_CHOICE -eq 2 ]]; then
-        echo "     1. llama3.2:1b  (1GB)  - Fast, works on any system"
-        echo "     2. llama3.2     (4GB)  - Balanced, recommended for workshop [RECOMMENDED]"
-        echo "     3. mistral      (4GB)  - Good for coding tasks"
+        printf "     \033[1;36m1.\033[0m llama3.2:1b  \033[2m(1GB)\033[0m  - Fast, works on any system\n"
+        printf "     \033[1;32m2.\033[0m \033[1mllama3.2\033[0m     \033[2m(4GB)\033[0m  - Balanced, recommended for workshop \033[1;33m[RECOMMENDED]\033[0m\n"
+        printf "     \033[1;36m3.\033[0m mistral      \033[2m(4GB)\033[0m  - Good for coding tasks\n"
       elif [[ $RECOMMENDED_CHOICE -eq 3 ]]; then
-        echo "     1. llama3.2:1b  (1GB)  - Fast, works on any system"
-        echo "     2. llama3.2     (4GB)  - Balanced, recommended for workshop"
-        echo "     3. mistral      (4GB)  - Good for coding tasks [RECOMMENDED]"
+        printf "     \033[1;36m1.\033[0m llama3.2:1b  \033[2m(1GB)\033[0m  - Fast, works on any system\n"
+        printf "     \033[1;36m2.\033[0m llama3.2     \033[2m(4GB)\033[0m  - Balanced, recommended for workshop\n"
+        printf "     \033[1;32m3.\033[0m \033[1mmistral\033[0m      \033[2m(4GB)\033[0m  - Good for coding tasks \033[1;33m[RECOMMENDED]\033[0m\n"
       else
-        echo "     1. llama3.2:1b  (1GB)  - Fast, works on any system"
-        echo "     2. llama3.2     (4GB)  - Balanced, recommended for workshop"
-        echo "     3. mistral      (4GB)  - Good for coding tasks"
+        printf "     \033[1;36m1.\033[0m llama3.2:1b  \033[2m(1GB)\033[0m  - Fast, works on any system\n"
+        printf "     \033[1;36m2.\033[0m llama3.2     \033[2m(4GB)\033[0m  - Balanced, recommended for workshop\n"
+        printf "     \033[1;36m3.\033[0m mistral      \033[2m(4GB)\033[0m  - Good for coding tasks\n"
       fi
 
-      echo "     4. All models   (9GB)  - Download all three ([!] takes longest, 15-30 min)"
-      echo "     5. Skip for now"
+      printf "     \033[1;35m4.\033[0m All models   \033[2m(9GB)\033[0m  - Download all three \033[1;33m([!] takes longest, 15-30 min)\033[0m\n"
+      printf "     \033[1;90m5.\033[0m Skip for now\n"
       echo ""
-      read -p "Enter choice (1-5) [default: $RECOMMENDED_CHOICE]: " model_choice
+      read -p "$(printf '\033[1mEnter choice (1-5)\033[0m [default: \033[1;33m'$RECOMMENDED_CHOICE'\033[0m]: ')" model_choice
 
       # Use recommended model if user just presses Enter
       if [[ -z "$model_choice" ]]; then
@@ -553,20 +651,20 @@ if [[ ${#OLLAMA_CMD[@]} -gt 0 ]]; then
 fi
 
 echo ""
-echo "======================================================="
-echo "   Setup Summary"
-echo "======================================================="
+separator
+printf "\033[1;36m   ✨ Setup Summary\033[0m\n"
+separator
 echo ""
 
 # Summary of what was accomplished
-echo "[OK] Completed:"
-echo "   • Docker verified and running"
-echo "   • Configuration files prepared (.env and docker-compose.yml)"
+printf "\033[1;32m✓ Completed:\033[0m\n"
+printf "   \033[1;32m✓\033[0m Docker verified and running\n"
+printf "   \033[1;32m✓\033[0m Configuration files prepared (.env and docker-compose.yml)\n"
 
 if [[ "${USE_HOST_OLLAMA:-0}" == "1" ]]; then
-  echo "   • Containers started: n8n, open-webui, postgres (using host Ollama)"
+  printf "   \033[1;32m✓\033[0m Containers started: \033[1mn8n, open-webui, postgres\033[0m (using host Ollama)\n"
 else
-  echo "   • Containers started: ollama, n8n, open-webui, postgres"
+  printf "   \033[1;32m✓\033[0m Containers started: \033[1mollama, n8n, open-webui, postgres\033[0m\n"
 fi
 
 # Count models
@@ -578,35 +676,35 @@ elif docker ps --format '{{.Names}}' | grep -q '^ollama$'; then
 fi
 
 if [[ $MODEL_COUNT -gt 0 ]]; then
-  echo "   • Ollama models installed: $MODEL_COUNT"
+  printf "   \033[1;32m✓\033[0m Ollama models installed: \033[1;33m$MODEL_COUNT\033[0m\n"
 else
-  echo "   • Ollama models: none (download later)"
+  printf "   \033[1;33m⚠\033[0m  Ollama models: none (download later)\n"
 fi
 
 echo ""
-echo "[i] Access Your Services:"
-echo "   • OpenWebUI:  http://localhost:3000  (Chat with LLMs)"
-echo "   • N8N:        http://localhost:5678  (Build workflows)"
+printf "\033[1;36m🌐 Access Your Services:\033[0m\n"
+printf "   \033[1;35m•\033[0m OpenWebUI:  \033[4;36mhttp://localhost:3000\033[0m  \033[2m(Chat with LLMs)\033[0m\n"
+printf "   \033[1;35m•\033[0m N8N:        \033[4;36mhttp://localhost:5678\033[0m  \033[2m(Build workflows)\033[0m\n"
 
 if [[ "${USE_HOST_OLLAMA:-0}" == "1" ]]; then
-  echo "   • Ollama API: http://localhost:11434 (Host Ollama)"
+  printf "   \033[1;35m•\033[0m Ollama API: \033[4;36mhttp://localhost:11434\033[0m \033[2m(Host Ollama)\033[0m\n"
 else
-  echo "   • Ollama API: http://localhost:11434 (LLM API endpoint)"
+  printf "   \033[1;35m•\033[0m Ollama API: \033[4;36mhttp://localhost:11434\033[0m \033[2m(LLM API endpoint)\033[0m\n"
 fi
 
 echo ""
-echo "[i] Next Steps:"
-echo "   1. Open OpenWebUI (http://localhost:3000) and create an account"
-echo "   2. Open N8N (http://localhost:5678) and set up credentials"
-echo "   3. Import workflows using n8n's 'Import from File' (see docs/QUICK_START.md)"
+printf "\033[1;33m📋 Next Steps:\033[0m\n"
+printf "   \033[1m1.\033[0m Open OpenWebUI (\033[4;36mhttp://localhost:3000\033[0m) and create an account\n"
+printf "   \033[1m2.\033[0m Open N8N (\033[4;36mhttp://localhost:5678\033[0m) and set up credentials\n"
+printf "   \033[1m3.\033[0m Import workflows using n8n's 'Import from File' (see \033[2mdocs/QUICK_START.md\033[0m)\n"
 echo ""
-echo "[i] Documentation:"
-echo "   • Quick Start:     docs/QUICK_START.md"
-echo "   • Configuration:   docs/CONFIGURATION.md"
-echo "   • Troubleshooting: docs/TROUBLESHOOTING.md"
-echo "   • Workflows:       workflows/README.md"
+printf "\033[1;36m📚 Documentation:\033[0m\n"
+printf "   \033[1;35m•\033[0m Quick Start:     \033[2mdocs/QUICK_START.md\033[0m\n"
+printf "   \033[1;35m•\033[0m Configuration:   \033[2mdocs/CONFIGURATION.md\033[0m\n"
+printf "   \033[1;35m•\033[0m Troubleshooting: \033[2mdocs/TROUBLESHOOTING.md\033[0m\n"
+printf "   \033[1;35m•\033[0m Workflows:       \033[2mworkflows/README.md\033[0m\n"
 echo ""
-echo "Happy building!"
+printf "\033[1;32m🎉 Happy building!\033[0m\n"
 echo ""
 
 if [[ "${ENABLE_LOGGING:-0}" == "1" ]]; then
