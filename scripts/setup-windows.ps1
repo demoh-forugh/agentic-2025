@@ -3,7 +3,8 @@
     n8n Workshop - Automated Setup Script
 
 .DESCRIPTION
-    Automated setup for n8n workshop Docker stack including Ollama, OpenWebUI, n8n, and PostgreSQL.
+    Automated setup for n8n workshop container stack including Ollama, OpenWebUI, n8n, and PostgreSQL.
+    Supports both Docker and Podman container runtimes.
     Includes idempotency checks, health validation, and comprehensive error handling.
 
 .PARAMETER WhatIf
@@ -19,16 +20,17 @@
     Run setup with detailed logging enabled
 
 .NOTES
-    Version: 1.1.1
-    Last Updated: 2025-10-05
+    Version: 1.4.0
+    Last Updated: 2025-10-11
     Workshop: Go to Agentic Conference 2025
-    Requires: Docker Desktop for Windows, WSL2
+    Requires: Docker Desktop (or Podman) for Windows, WSL2
 #>
 
 # n8n Workshop - Automated Setup Script
-# Version: 1.1.1
-# Last Updated: 2025-10-05
+# Version: 1.4.0
+# Last Updated: 2025-10-11
 # Workshop: Go to Agentic Conference 2025
+# Supports: Docker Desktop, Podman (with automatic machine setup and GPU auto-configuration)
 
 # Optional logging (set $env:ENABLE_LOGGING="1" to enable)
 if ($env:ENABLE_LOGGING -eq "1") {
@@ -40,10 +42,16 @@ if ($env:ENABLE_LOGGING -eq "1") {
 
 Write-Host ""
 Write-Host "=========================================================" -ForegroundColor Cyan
-Write-Host "   n8n Workshop - Automated Setup Script v1.1.1" -ForegroundColor White
+Write-Host "   n8n Workshop - Automated Setup Script v1.4.0" -ForegroundColor White
 Write-Host "   Go to Agentic Conference 2025" -ForegroundColor Yellow
+Write-Host "   Supports: Docker & Podman (with GPU auto-config)" -ForegroundColor DarkCyan
 Write-Host "=========================================================" -ForegroundColor Cyan
 Write-Host ""
+
+# Global variables to track which container runtime is being used
+$script:ContainerRuntime = $null
+$script:containerCmd = $null
+$script:composeCmd = $null
 
 # Function to check if a command exists
 function Test-CommandExists {
@@ -70,23 +78,32 @@ function Write-Status {
         "SUCCESS" { "[OK]" }
         "ERROR"   { "[X]" }
         "WARNING" { "[!]" }
-        default   { "[i]" }
+        "DEFAULT" { "[i]" }
     }
 
     Write-Host "  $symbol " -ForegroundColor $color -NoNewline
     Write-Host $Message -ForegroundColor White
 }
 
-# Helper to run Docker Compose (supports v1 'docker-compose' and v2 'docker compose')
+# Helper to run Docker/Podman Compose (supports v1 'docker-compose' and v2 'docker compose' or 'podman-compose')
 function Invoke-Compose {
     param(
         [Parameter(ValueFromRemainingArguments = $true)]
         [string[]]$Args
     )
-    if (Test-CommandExists docker-compose) {
-        & docker-compose @Args
+
+    if ($script:ContainerRuntime -eq "podman") {
+        if (Test-CommandExists podman-compose) {
+            & podman-compose @Args
+        } else {
+            & podman compose @Args
+        }
     } else {
-        & docker compose @Args
+        if (Test-CommandExists docker-compose) {
+            & docker-compose @Args
+        } else {
+            & docker compose @Args
+        }
     }
 }
 
@@ -184,8 +201,8 @@ function Wait-ContainerHealth {
     $interval = 2
 
     while ($elapsed -lt $TimeoutSeconds) {
-        $health = docker inspect --format='{{.State.Health.Status}}' $ContainerName 2>$null
-        $running = docker inspect --format='{{.State.Running}}' $ContainerName 2>$null
+        $health = & $script:containerCmd inspect --format='{{.State.Health.Status}}' $ContainerName 2>$null
+        $running = & $script:containerCmd inspect --format='{{.State.Running}}' $ContainerName 2>$null
         
         # Container is healthy
         if ($health -eq "healthy") {
@@ -238,14 +255,26 @@ Write-Host "  CHECKING PREREQUISITES" -ForegroundColor Cyan
 Write-Host "---------------------------------------------------------" -ForegroundColor DarkGray
 Write-Host ""
 
-# Check Docker
-if (Test-CommandExists docker) {
+# Check for Docker or Podman
+$dockerInstalled = Test-CommandExists docker
+$podmanInstalled = Test-CommandExists podman
+
+if ($dockerInstalled) {
     $dockerVersion = docker --version
     Write-Status "Docker is installed: $dockerVersion" "SUCCESS"
+    $script:ContainerRuntime = "docker"
+    $script:containerCmd = "docker"
+} elseif ($podmanInstalled) {
+    $podmanVersion = podman --version
+    Write-Status "Podman is installed: $podmanVersion" "SUCCESS"
+    $script:ContainerRuntime = "podman"
+    $script:containerCmd = "podman"
 } else {
-    Write-Status "Docker is not installed!" "ERROR"
+    Write-Status "Neither Docker nor Podman is installed!" "ERROR"
     Write-Host ""
-    Write-Host "  >> Installation Instructions:" -ForegroundColor Yellow
+    Write-Host "  >> Installation Options:" -ForegroundColor Yellow
+    Write-Host ""
+    Write-Host "  OPTION 1: Docker Desktop (Recommended for beginners)" -ForegroundColor Cyan
     Write-Host "     1. Download Docker Desktop:" -ForegroundColor White
     Write-Host "        https://www.docker.com/products/docker-desktop/" -ForegroundColor Cyan
     Write-Host "     2. Install and restart your computer" -ForegroundColor White
@@ -256,74 +285,199 @@ if (Test-CommandExists docker) {
     Write-Host "        - Log in to Docker Desktop (or skip login if prompted)" -ForegroundColor White
     Write-Host "        - Wait for Docker Desktop to fully start (icon in system tray)" -ForegroundColor White
     Write-Host "        - Ensure Docker Desktop shows 'Engine running' status" -ForegroundColor White
-    Write-Host "     5. Run this script again after Docker Desktop is fully running" -ForegroundColor White
+    Write-Host ""
+    Write-Host "  OPTION 2: Podman (Open-source alternative)" -ForegroundColor Cyan
+    Write-Host "     1. Download Podman for Windows:" -ForegroundColor White
+    Write-Host "        https://podman.io/getting-started/installation" -ForegroundColor Cyan
+    Write-Host "     2. Install and initialize Podman machine:" -ForegroundColor White
+    Write-Host "        podman machine init" -ForegroundColor Cyan
+    Write-Host "        podman machine start" -ForegroundColor Cyan
+    Write-Host "     3. Install podman-compose:" -ForegroundColor White
+    Write-Host "        pip install podman-compose" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "  >> Run this script again after installation is complete" -ForegroundColor Yellow
     Write-Host ""
     exit 1
 }
 
-# Check Docker daemon is running and healthy
-try {
-    docker ps | Out-Null
-    Write-Status "Docker daemon is running" "SUCCESS"
-} catch {
-    Write-Status "Docker daemon is not running!" "ERROR"
+# If using Podman, ensure machine is initialized and running
+if ($script:ContainerRuntime -eq "podman") {
     Write-Host ""
-    Write-Host "  >> Troubleshooting Steps:" -ForegroundColor Yellow
-    Write-Host "     1. Open Docker Desktop from Windows Start Menu" -ForegroundColor White
-    Write-Host "     2. IMPORTANT: Log in to Docker Desktop (or skip login if prompted)" -ForegroundColor Yellow
-    Write-Host "        - Docker Desktop requires you to be logged in or skip the login prompt" -ForegroundColor White
-    Write-Host "        - Wait for Docker Desktop to fully initialize (30-60 seconds)" -ForegroundColor White
-    Write-Host "     3. Verify Docker Desktop status:" -ForegroundColor White
-    Write-Host "        - Look for Docker icon in system tray (whale icon)" -ForegroundColor White
-    Write-Host "        - Icon should show 'Engine running' when you hover over it" -ForegroundColor White
-    Write-Host "        - Open Docker Desktop and ensure no error messages appear" -ForegroundColor White
-    Write-Host "     4. If WSL2 errors appear, run:" -ForegroundColor White
-    Write-Host "        wsl --update" -ForegroundColor Cyan
-    Write-Host "     5. Run this script again after Docker Desktop is fully running" -ForegroundColor White
-    Write-Host ""
-    Write-Host "  >> Common Error: '500 Internal Server Error for API route'" -ForegroundColor Red
-    Write-Host "     This usually means Docker Desktop is installed but not logged in or not fully started." -ForegroundColor White
-    Write-Host "     Solution: Open Docker Desktop, complete login/skip, and wait for it to fully start." -ForegroundColor Yellow
-    Write-Host ""
-    exit 1
-}
+    Write-Status "Checking Podman machine status..." "INFO"
 
-# Additional Docker health check - verify daemon is responsive
-try {
-    $dockerInfo = docker info --format '{{.ServerVersion}}' 2>$null
-    if ($dockerInfo) {
-        Write-Status "Docker daemon is responsive (version: $dockerInfo)" "SUCCESS"
+    # Check if any Podman machines exist
+    $machineList = & podman machine list --format "{{.Name}}" 2>$null
+
+    if (-not $machineList -or $machineList.Trim() -eq "") {
+        Write-Status "No Podman machine found. Initializing..." "WARNING"
+        Write-Host ""
+        Write-Host "  >> First-time Podman setup - this will take 1-2 minutes" -ForegroundColor Yellow
+        Write-Host "     - Downloading Podman machine OS image" -ForegroundColor White
+        Write-Host "     - Creating WSL2 virtual machine" -ForegroundColor White
+        Write-Host ""
+
+        try {
+            & podman machine init 2>&1 | Out-Null
+            if ($LASTEXITCODE -eq 0) {
+                Write-Status "Podman machine initialized successfully" "SUCCESS"
+            } else {
+                Write-Status "Podman machine initialization completed with warnings" "WARNING"
+            }
+        } catch {
+            Write-Status "Failed to initialize Podman machine" "ERROR"
+            Write-Host ""
+            Write-Host "  >> Error: $($_.Exception.Message)" -ForegroundColor Red
+            Write-Host "  >> Please run manually: podman machine init" -ForegroundColor Yellow
+            Write-Host ""
+            exit 1
+        }
     } else {
-        Write-Status "Docker daemon is slow to respond. Waiting 10 seconds..." "WARNING"
+        Write-Status "Podman machine exists" "SUCCESS"
+    }
+
+    # Check if machine is running
+    $machineRunning = & podman machine list --format "{{.Running}}" 2>$null | Select-String -Pattern "true" -Quiet
+
+    if (-not $machineRunning) {
+        Write-Status "Podman machine is not running. Starting..." "WARNING"
+        Write-Host ""
+        Write-Host "  >> Starting Podman machine (this may take 10-30 seconds)" -ForegroundColor Yellow
+        Write-Host ""
+
+        try {
+            & podman machine start 2>&1 | Out-Null
+            if ($LASTEXITCODE -eq 0) {
+                Write-Status "Podman machine started successfully" "SUCCESS"
+                # Give it a moment to fully initialize
+                Start-Sleep -Seconds 3
+            } else {
+                Write-Status "Podman machine start completed with warnings" "WARNING"
+            }
+        } catch {
+            Write-Status "Failed to start Podman machine" "ERROR"
+            Write-Host ""
+            Write-Host "  >> Error: $($_.Exception.Message)" -ForegroundColor Red
+            Write-Host "  >> Please run manually: podman machine start" -ForegroundColor Yellow
+            Write-Host ""
+            exit 1
+        }
+    } else {
+        Write-Status "Podman machine is already running" "SUCCESS"
+    }
+}
+
+# Determine compose command
+if ($script:ContainerRuntime -eq "podman") {
+    if (Test-CommandExists podman-compose) {
+        $script:composeCmd = "podman-compose"
+    } else {
+        $script:composeCmd = "podman compose"
+    }
+} else {
+    if (Test-CommandExists docker-compose) {
+        $script:composeCmd = "docker-compose"
+    } else {
+        $script:composeCmd = "docker compose"
+    }
+}
+
+# Check container daemon is running and healthy
+try {
+    & $script:containerCmd ps | Out-Null
+    Write-Status "$($script:ContainerRuntime) is running" "SUCCESS"
+} catch {
+    Write-Status "$($script:ContainerRuntime) is not running!" "ERROR"
+    Write-Host ""
+    if ($script:ContainerRuntime -eq "podman") {
+        Write-Host "  >> Troubleshooting Steps for Podman:" -ForegroundColor Yellow
+        Write-Host "     1. Check Podman machine status:" -ForegroundColor White
+        Write-Host "        podman machine list" -ForegroundColor Cyan
+        Write-Host "     2. Check Podman machine logs:" -ForegroundColor White
+        Write-Host "        podman machine inspect" -ForegroundColor Cyan
+        Write-Host "     3. Try restarting the Podman machine:" -ForegroundColor White
+        Write-Host "        podman machine stop" -ForegroundColor Cyan
+        Write-Host "        podman machine start" -ForegroundColor Cyan
+        Write-Host "     4. If issues persist, try recreating the machine:" -ForegroundColor White
+        Write-Host "        podman machine rm" -ForegroundColor Cyan
+        Write-Host "        podman machine init" -ForegroundColor Cyan
+        Write-Host "        podman machine start" -ForegroundColor Cyan
+    } else {
+        Write-Host "  >> Troubleshooting Steps for Docker:" -ForegroundColor Yellow
+        Write-Host "     1. Open Docker Desktop from Windows Start Menu" -ForegroundColor White
+        Write-Host "     2. IMPORTANT: Log in to Docker Desktop (or skip login if prompted)" -ForegroundColor Yellow
+        Write-Host "        - Docker Desktop requires you to be logged in or skip the login prompt" -ForegroundColor White
+        Write-Host "        - Wait for Docker Desktop to fully initialize (30-60 seconds)" -ForegroundColor White
+        Write-Host "     3. Verify Docker Desktop status:" -ForegroundColor White
+        Write-Host "        - Look for Docker icon in system tray (whale icon)" -ForegroundColor White
+        Write-Host "        - Icon should show 'Engine running' when you hover over it" -ForegroundColor White
+        Write-Host "        - Open Docker Desktop and ensure no error messages appear" -ForegroundColor White
+        Write-Host "     4. If WSL2 errors appear, run:" -ForegroundColor White
+        Write-Host "        wsl --update" -ForegroundColor Cyan
+        Write-Host "     5. Run this script again after Docker Desktop is fully running" -ForegroundColor White
+        Write-Host ""
+        Write-Host "  >> Common Error: '500 Internal Server Error for API route'" -ForegroundColor Red
+        Write-Host "     This usually means Docker Desktop is installed but not logged in or not fully started." -ForegroundColor White
+        Write-Host "     Solution: Open Docker Desktop, complete login/skip, and wait for it to fully start." -ForegroundColor Yellow
+    }
+    Write-Host ""
+    exit 1
+}
+
+# Additional health check - verify daemon is responsive
+try {
+    if ($script:ContainerRuntime -eq "podman") {
+        $runtimeInfo = & $script:containerCmd info --format '{{.Version.Version}}' 2>$null
+    } else {
+        $runtimeInfo = & $script:containerCmd info --format '{{.ServerVersion}}' 2>$null
+    }
+
+    if ($runtimeInfo) {
+        Write-Status "$($script:ContainerRuntime) is responsive (version: $runtimeInfo)" "SUCCESS"
+    } else {
+        Write-Status "$($script:ContainerRuntime) is slow to respond. Waiting 10 seconds..." "WARNING"
         Start-Sleep -Seconds 10
-        $dockerInfo = docker info --format '{{.ServerVersion}}' 2>$null
-        if (-not $dockerInfo) {
-            Write-Status "Docker daemon not fully initialized. Please wait and retry." "ERROR"
+
+        if ($script:ContainerRuntime -eq "podman") {
+            $runtimeInfo = & $script:containerCmd info --format '{{.Version.Version}}' 2>$null
+        } else {
+            $runtimeInfo = & $script:containerCmd info --format '{{.ServerVersion}}' 2>$null
+        }
+
+        if (-not $runtimeInfo) {
+            Write-Status "$($script:ContainerRuntime) not fully initialized. Please wait and retry." "ERROR"
             exit 1
         }
     }
 } catch {
-    Write-Status "Could not verify Docker daemon health." "WARNING"
+    Write-Status "Could not verify $($script:ContainerRuntime) health." "WARNING"
 }
 
-# Check Docker Compose
-if (Test-CommandExists docker-compose) {
-    $composeVersion = docker-compose --version
-    Write-Status "Docker Compose is installed: $composeVersion" "SUCCESS"
-} elseif (Test-CommandExists docker) {
-    try {
-        docker compose version | Out-Null
-        Write-Status "Docker Compose V2 is available" "SUCCESS"
-    } catch {
-        Write-Status "Docker Compose (v1 or v2) is not available!" "ERROR"
+# Check Compose tool (validate the compose command we detected works)
+try {
+    if ($script:composeCmd -like "*compose") {
+        # Using 'docker compose' or 'podman compose' subcommand
+        & $script:composeCmd version | Out-Null
+        Write-Status "Compose command is available: $script:composeCmd" "SUCCESS"
+    } else {
+        # Using docker-compose or podman-compose standalone
+        $composeVersion = & $script:composeCmd --version
+        Write-Status "Compose is installed: $composeVersion" "SUCCESS"
+    }
+} catch {
+    Write-Status "Compose command ($script:composeCmd) is not available!" "ERROR"
+    Write-Host ""
+    if ($script:ContainerRuntime -eq "podman") {
+        Write-Host "  >> Installation Instructions:" -ForegroundColor Yellow
+        Write-Host "     Install podman-compose with pip:" -ForegroundColor White
+        Write-Host "     pip install podman-compose" -ForegroundColor Cyan
         Write-Host ""
+        Write-Host "     Or use Podman's built-in compose:" -ForegroundColor White
+        Write-Host "     Ensure you have Podman 3.0+ with compose support" -ForegroundColor White
+    } else {
         Write-Host "  >> Docker Compose should be included with Docker Desktop." -ForegroundColor Yellow
         Write-Host "     Try reinstalling Docker Desktop." -ForegroundColor White
-        Write-Host ""
-        exit 1
     }
-} else {
-    Write-Status "Docker is not available!" "ERROR"
+    Write-Host ""
     exit 1
 }
 
@@ -394,24 +548,89 @@ if (-Not (Test-Path "docker-compose.yml")) {
 
 Write-Host ""
 
-# GPU detection
+# GPU detection and configuration
 $composeArgs = @('-f', 'docker-compose.yml')
 $gpuOverridePath = 'configs\docker-compose.gpu.yml'
-try {
-    $nvsmi = Get-Command nvidia-smi -ErrorAction SilentlyContinue
-    if ($nvsmi) {
-        & nvidia-smi > $null 2>&1
-        if ($LASTEXITCODE -eq 0 -and (Test-Path $gpuOverridePath)) {
-            Write-Status "NVIDIA GPU detected. Enabling GPU acceleration." "INFO"
-            $composeArgs += @('-f', $gpuOverridePath)
+$podmanGpuOverridePath = 'configs\docker-compose.podman-gpu.yml'
+
+if ($script:ContainerRuntime -eq "podman") {
+    # Podman GPU detection and CDI setup
+    try {
+        $nvsmi = Get-Command nvidia-smi -ErrorAction SilentlyContinue
+        if ($nvsmi) {
+            & nvidia-smi > $null 2>&1
+            if ($LASTEXITCODE -eq 0) {
+                Write-Host ""
+                Write-Status "NVIDIA GPU detected. Configuring Podman GPU support..." "INFO"
+
+                # Check if nvidia-container-toolkit is installed in Podman machine
+                $toolkitInstalled = & podman machine ssh podman-machine-default "command -v nvidia-ctk" 2>$null
+
+                if (-not $toolkitInstalled) {
+                    Write-Host "  >> Installing NVIDIA Container Toolkit (this may take 2-3 minutes)..." -ForegroundColor Yellow
+
+                    # Add NVIDIA repository
+                    & podman machine ssh podman-machine-default "curl -s -L https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo | sudo tee /etc/yum.repos.d/nvidia-container-toolkit.repo" > $null 2>&1
+
+                    # Install toolkit
+                    & podman machine ssh podman-machine-default "sudo dnf install -y nvidia-container-toolkit" > $null 2>&1
+
+                    if ($LASTEXITCODE -eq 0) {
+                        Write-Status "NVIDIA Container Toolkit installed successfully" "SUCCESS"
+                    } else {
+                        Write-Status "Failed to install NVIDIA Container Toolkit. Using CPU-only mode." "WARNING"
+                        Write-Host "  >> You can install manually: see docs/PODMAN_GPU_SETUP.md" -ForegroundColor DarkGray
+                        $nvsmi = $null  # Disable GPU
+                    }
+                } else {
+                    Write-Status "NVIDIA Container Toolkit already installed" "SUCCESS"
+                }
+
+                # Generate CDI specifications if toolkit is installed
+                if ($nvsmi) {
+                    Write-Host "  >> Generating CDI specifications..." -ForegroundColor Cyan
+                    & podman machine ssh podman-machine-default "sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml" > $null 2>&1
+
+                    if ($LASTEXITCODE -eq 0) {
+                        Write-Status "CDI specifications generated. GPU acceleration enabled!" "SUCCESS"
+
+                        # Use Podman GPU compose file
+                        if (Test-Path $podmanGpuOverridePath) {
+                            $composeArgs += @('-f', $podmanGpuOverridePath)
+                        } else {
+                            Write-Status "Podman GPU compose file not found. Using CPU-only mode." "WARNING"
+                        }
+                    } else {
+                        Write-Status "Failed to generate CDI specs. Using CPU-only mode." "WARNING"
+                    }
+                }
+            } else {
+                Write-Status "No NVIDIA GPU detected. Using CPU-only mode." "INFO"
+            }
         } else {
-            Write-Status "NVIDIA GPU not available or override file missing. Using CPU-only mode." "WARNING"
+            Write-Status "No NVIDIA GPU detected. Using CPU-only mode." "INFO"
         }
-    } else {
-        Write-Status "No NVIDIA GPU detected. Using CPU-only mode." "INFO"
+    } catch {
+        Write-Status "GPU detection failed. Using CPU-only mode." "WARNING"
     }
-} catch {
-    Write-Status "GPU detection failed. Using CPU-only mode." "WARNING"
+} else {
+    # Docker GPU detection
+    try {
+        $nvsmi = Get-Command nvidia-smi -ErrorAction SilentlyContinue
+        if ($nvsmi) {
+            & nvidia-smi > $null 2>&1
+            if ($LASTEXITCODE -eq 0 -and (Test-Path $gpuOverridePath)) {
+                Write-Status "NVIDIA GPU detected. Enabling GPU acceleration." "INFO"
+                $composeArgs += @('-f', $gpuOverridePath)
+            } else {
+                Write-Status "NVIDIA GPU not available or override file missing. Using CPU-only mode." "WARNING"
+            }
+        } else {
+            Write-Status "No NVIDIA GPU detected. Using CPU-only mode." "INFO"
+        }
+    } catch {
+        Write-Status "GPU detection failed. Using CPU-only mode." "WARNING"
+    }
 }
 
 # Check if containers are already running (idempotency)
@@ -421,7 +640,7 @@ $existingContainers = @()
 $requiredContainers = @("ollama", "n8n", "open-webui", "postgres")
 
 foreach ($containerName in $requiredContainers) {
-    $running = docker ps --filter "name=$containerName" --format "{{.Names}}" 2>$null | Select-String -Pattern "^$containerName$" -Quiet
+    $running = & $script:containerCmd ps --filter "name=$containerName" --format "{{.Names}}" 2>$null | Select-String -Pattern "^$containerName$" -Quiet
     if ($running) {
         $existingContainers += $containerName
     }
@@ -447,10 +666,10 @@ if ($existingContainers.Count -gt 0) {
             Write-Host ""
             Write-Host "  >> Troubleshooting Steps:" -ForegroundColor Yellow
             Write-Host "     1. Check logs:" -ForegroundColor White
-            Write-Host "        docker-compose logs -f" -ForegroundColor Cyan
+            Write-Host "        $($script:composeCmd) logs -f" -ForegroundColor Cyan
             Write-Host "     2. Stop and start manually:" -ForegroundColor White
-            Write-Host "        docker-compose down" -ForegroundColor Cyan
-            Write-Host "        docker-compose up -d" -ForegroundColor Cyan
+            Write-Host "        $($script:composeCmd) down" -ForegroundColor Cyan
+            Write-Host "        $($script:composeCmd) up -d" -ForegroundColor Cyan
             Write-Host ""
             exit 1
         }
@@ -459,60 +678,80 @@ if ($existingContainers.Count -gt 0) {
     }
 } else {
     # Start containers
-    Write-Status "Starting Docker containers..." "INFO"
+    Write-Status "Starting containers..." "INFO"
     Write-Host ""
-    Write-Host "  >> IMPORTANT: First-time setup will download Docker images" -ForegroundColor Yellow
+    Write-Host "  >> IMPORTANT: First-time setup will download container images" -ForegroundColor Yellow
     Write-Host "     - Total download size: ~4-5 GB (ollama, n8n, open-webui, postgres)" -ForegroundColor White
     Write-Host "     - Download time: 5-15 minutes depending on your internet speed" -ForegroundColor White
-    Write-Host "     - After download completes, Docker will VERIFY/EXTRACT the images" -ForegroundColor Cyan
+    Write-Host "     - After download completes, images will be VERIFIED/EXTRACTED" -ForegroundColor Cyan
     Write-Host "     - Verification may take 1-3 minutes and will show 'Pulling' status" -ForegroundColor Cyan
     Write-Host "     - This is normal - please be patient while images are verified!" -ForegroundColor Yellow
     Write-Host ""
 
     try {
-        # Start containers in detached mode (suppress container logs, only show creation status)
+        # Start containers with real-time progress display
         Write-Host "  Creating and starting containers..." -ForegroundColor Cyan
+        Write-Host "  >> Showing live download/extraction progress below..." -ForegroundColor Yellow
+        Write-Host ""
         $startTime = Get-Date
-        
-        # Use --detach explicitly and redirect to capture only status messages
-        # The --quiet-pull flag suppresses pull output after first time
+
+        # Stream output in real-time to show download progress
+        # Remove --quiet-pull to see progress, use --progress=plain for better output
         $ErrorActionPreference = 'Continue'
-        $output = Invoke-Compose @composeArgs up --detach --quiet-pull 2>&1 | Out-String
+
+        # Track last output time for progress indicator
+        $lastOutputTime = Get-Date
+        $progressInterval = 10  # Show progress every 10 seconds of silence
+
+        # Execute compose with real-time output
+        Invoke-Compose @composeArgs up --detach 2>&1 | ForEach-Object {
+            $line = $_.ToString()
+            $now = Get-Date
+
+            # Show periodic progress if no output for a while
+            if (($now - $lastOutputTime).TotalSeconds -gt $progressInterval) {
+                $elapsed = [math]::Round(($now - $startTime).TotalSeconds, 0)
+                Write-Host "  ... still working (${elapsed}s elapsed)" -ForegroundColor DarkGray
+                $lastOutputTime = $now
+            }
+
+            # Show meaningful progress lines (pulling, extracting, creating, starting)
+            if ($line -match 'Pulling|Pull complete|Extracting|Download|Verifying|Creating|Starting|Container.*created|Container.*started|Network|Volume') {
+                Write-Host "  $line" -ForegroundColor Gray
+                $lastOutputTime = $now
+            } elseif ($line -match 'Waiting|Downloaded') {
+                Write-Host "  $line" -ForegroundColor DarkGray
+                $lastOutputTime = $now
+            } elseif ($line -match 'Error|Failed|error|failed') {
+                Write-Host "  $line" -ForegroundColor Red
+                $lastOutputTime = $now
+            }
+        }
+
         $ErrorActionPreference = 'Stop'
-        
+
         if ($LASTEXITCODE -ne 0) {
-            Write-Host $output
-            throw "docker-compose up failed with exit code $LASTEXITCODE"
+            throw "compose up failed with exit code $LASTEXITCODE"
         }
-        
-        # Show only the summary lines (Running X/Y, Container created/started)
-        # Filter out "Attaching to" and container log lines
-        $output -split "`n" | Where-Object { 
-            $_ -notmatch '^(Attaching to|.*\s+\|)' -and 
-            $_ -match '^\[.*\]|^✔|^\s*✔|Container.*|Network.*|Volume.*' -and
-            $_.Trim() -ne ''
-        } | ForEach-Object { 
-            Write-Host "  $_" -ForegroundColor Gray
-        }
-        
+
         $elapsed = ((Get-Date) - $startTime).TotalSeconds
         Write-Host ""
         Write-Status "Containers started successfully in $([math]::Round($elapsed, 1))s" "SUCCESS"
         Write-Host "  >> Containers are running in the background" -ForegroundColor Cyan
-        Write-Host "     To view logs: docker-compose logs -f" -ForegroundColor DarkGray
+        Write-Host "     To view logs: $($script:composeCmd) logs -f" -ForegroundColor DarkGray
     } catch {
         Write-Status "Failed to start containers." "ERROR"
         Write-Host ""
         Write-Host "  >> Troubleshooting Steps:" -ForegroundColor Yellow
         Write-Host "     1. Check logs:" -ForegroundColor White
-        Write-Host "        docker-compose logs -f" -ForegroundColor Cyan
+        Write-Host "        $($script:composeCmd) logs -f" -ForegroundColor Cyan
         Write-Host "     2. Check for port conflicts:" -ForegroundColor White
         Write-Host "        netstat -ano | findstr `":5678 :3000 :11434 :5432`"" -ForegroundColor Cyan
         Write-Host "     3. Verify WSL2 is running:" -ForegroundColor White
         Write-Host "        wsl --status" -ForegroundColor Cyan
-        Write-Host "     4. Restart Docker Desktop and retry this script" -ForegroundColor White
+        Write-Host "     4. Restart $($script:ContainerRuntime) and retry this script" -ForegroundColor White
         Write-Host "     5. Check disk space:" -ForegroundColor White
-        Write-Host "        docker system df" -ForegroundColor Cyan
+        Write-Host "        $($script:containerCmd) system df" -ForegroundColor Cyan
         Write-Host ""
         Write-Host "  >> Full error message:" -ForegroundColor Red
         Write-Host "     $($_.Exception.Message)" -ForegroundColor Red
@@ -539,7 +778,7 @@ if ($existingContainers.Count -gt 0) {
     if ($unhealthyContainers.Count -gt 0) {
         Write-Status "Note: Some containers are still initializing: $($unhealthyContainers -join ', ')" "WARNING"
         Write-Host "  >> This is usually fine - containers may take extra time to fully start" -ForegroundColor Cyan
-        Write-Host "  >> Verify status with: docker-compose ps" -ForegroundColor DarkGray
+        Write-Host "  >> Verify status with: $($script:composeCmd) ps" -ForegroundColor DarkGray
     } else {
         Write-Status "All containers are ready!" "SUCCESS"
     }
@@ -567,7 +806,7 @@ if ($downloadModel -eq "" -or $downloadModel -eq "Y" -or $downloadModel -eq "y")
     # First, check existing models
     Write-Status "Checking for existing Ollama models..." "INFO"
     try {
-        $existingModels = docker exec ollama ollama list 2>$null
+        $existingModels = & $script:containerCmd exec ollama ollama list 2>$null
         if ($existingModels) {
             Write-Host ""
             Write-Host "Currently installed models:" -ForegroundColor Cyan
@@ -586,19 +825,34 @@ if ($downloadModel -eq "" -or $downloadModel -eq "Y" -or $downloadModel -eq "y")
     $color1 = if ($systemSpecs.RecommendedChoice -eq 1) { "Green" } else { "White" }
     $color2 = if ($systemSpecs.RecommendedChoice -eq 2) { "Green" } else { "White" }
     $color3 = if ($systemSpecs.RecommendedChoice -eq 3) { "Green" } else { "White" }
+    $color4 = if ($systemSpecs.RecommendedChoice -eq 4) { "Green" } else { "White" }
+    $color5 = if ($systemSpecs.RecommendedChoice -eq 5) { "Green" } else { "White" }
+    $color6 = if ($systemSpecs.RecommendedChoice -eq 6) { "Green" } else { "White" }
 
     $marker1 = if ($systemSpecs.RecommendedChoice -eq 1) { " [RECOMMENDED]" } else { "" }
     $marker2 = if ($systemSpecs.RecommendedChoice -eq 2) { " [RECOMMENDED]" } else { "" }
     $marker3 = if ($systemSpecs.RecommendedChoice -eq 3) { " [RECOMMENDED]" } else { "" }
+    $marker4 = if ($systemSpecs.RecommendedChoice -eq 4) { " [RECOMMENDED]" } else { "" }
+    $marker5 = if ($systemSpecs.RecommendedChoice -eq 5) { " [RECOMMENDED]" } else { "" }
+    $marker6 = if ($systemSpecs.RecommendedChoice -eq 6) { " [RECOMMENDED]" } else { "" }
 
-    Write-Host "     1. llama3.2:1b  (1GB)  - Fast, works on any system$marker1" -ForegroundColor $color1
-    Write-Host "     2. llama3.2     (4GB)  - Balanced, recommended for workshop$marker2" -ForegroundColor $color2
-    Write-Host "     3. mistral      (4GB)  - Good for coding tasks$marker3" -ForegroundColor $color3
-    Write-Host "     4. All models   (9GB)  - Download all three ([!] takes longest, 15-30 min)" -ForegroundColor Cyan
-    Write-Host "     5. Skip for now" -ForegroundColor DarkGray
+    Write-Host "     Small Models (CPU/Low-end GPU):" -ForegroundColor DarkCyan
+    Write-Host "     1. llama3.2:1b      (1GB)   - Fast, works on any system$marker1" -ForegroundColor $color1
+    Write-Host "     2. llama3.2         (4GB)   - Balanced, good for workshop$marker2" -ForegroundColor $color2
+    Write-Host ""
+    Write-Host "     Medium Models (GPU with 8GB+ VRAM):" -ForegroundColor DarkCyan
+    Write-Host "     3. mistral          (4GB)   - Good for coding tasks$marker3" -ForegroundColor $color3
+    Write-Host "     4. llama3.1:8b      (8GB)   - More capable, latest Llama$marker4" -ForegroundColor $color4
+    Write-Host ""
+    Write-Host "     Large Models (GPU with 12GB+ VRAM):" -ForegroundColor DarkCyan
+    Write-Host "     5. mistral-nemo     (12GB)  - Advanced Mistral model$marker5" -ForegroundColor $color5
+    Write-Host "     6. qwen2.5:14b      (14GB)  - Powerful multilingual model$marker6" -ForegroundColor $color6
+    Write-Host ""
+    Write-Host "     7. Workshop bundle  (5GB)   - llama3.2:1b + llama3.2" -ForegroundColor Cyan
+    Write-Host "     8. Skip for now" -ForegroundColor DarkGray
     Write-Host ""
 
-    $modelChoice = Read-Host "Enter choice (1-5) [default: $($systemSpecs.RecommendedChoice)]"
+    $modelChoice = Read-Host "Enter choice (1-8) [default: $($systemSpecs.RecommendedChoice)]"
 
     # Use recommended model if user just presses Enter
     if ([string]::IsNullOrWhiteSpace($modelChoice)) {
@@ -610,7 +864,10 @@ if ($downloadModel -eq "" -or $downloadModel -eq "Y" -or $downloadModel -eq "y")
         "1" { @("llama3.2:1b") }
         "2" { @("llama3.2") }
         "3" { @("mistral") }
-        "4" { @("llama3.2:1b", "llama3.2", "mistral") }
+        "4" { @("llama3.1:8b") }
+        "5" { @("mistral-nemo") }
+        "6" { @("qwen2.5:14b") }
+        "7" { @("llama3.2:1b", "llama3.2") }
         default { @() }
     }
 
@@ -628,7 +885,7 @@ if ($downloadModel -eq "" -or $downloadModel -eq "Y" -or $downloadModel -eq "y")
             # Check if model already exists
             $modelExists = $false
             try {
-                $existingModels = docker exec ollama ollama list 2>$null
+                $existingModels = & $script:containerCmd exec ollama ollama list 2>$null
                 if ($existingModels -match [regex]::Escape($model)) {
                     $modelExists = $true
                 }
@@ -649,7 +906,7 @@ if ($downloadModel -eq "" -or $downloadModel -eq "Y" -or $downloadModel -eq "y")
                 Write-Host ""
 
                 try {
-                    docker exec -it ollama ollama pull $model
+                    & $script:containerCmd exec -it ollama ollama pull $model
                     if ($LASTEXITCODE -eq 0) {
                         Write-Host ""
                         Write-Status "Model '$model' downloaded successfully!" "SUCCESS"
@@ -660,9 +917,9 @@ if ($downloadModel -eq "" -or $downloadModel -eq "Y" -or $downloadModel -eq "y")
                         $failCount++
                         Write-Host ""
                         Write-Host "  >> Verify download with:" -ForegroundColor Yellow
-                        Write-Host "     docker exec -it ollama ollama list" -ForegroundColor Cyan
+                        Write-Host "     $($script:containerCmd) exec -it ollama ollama list" -ForegroundColor Cyan
                         Write-Host "  >> Retry download with:" -ForegroundColor Yellow
-                        Write-Host "     docker exec -it ollama ollama pull $model" -ForegroundColor Cyan
+                        Write-Host "     $($script:containerCmd) exec -it ollama ollama pull $model" -ForegroundColor Cyan
                     }
                 } catch {
                     Write-Host ""
@@ -672,11 +929,11 @@ if ($downloadModel -eq "" -or $downloadModel -eq "Y" -or $downloadModel -eq "y")
                     Write-Host "  >> Troubleshooting:" -ForegroundColor Yellow
                     Write-Host "     * Check internet connection" -ForegroundColor White
                     Write-Host "     * Verify Ollama container is running:" -ForegroundColor White
-                    Write-Host "       docker ps | findstr ollama" -ForegroundColor Cyan
+                    Write-Host "       $($script:containerCmd) ps | findstr ollama" -ForegroundColor Cyan
                     Write-Host "     * Check Ollama logs:" -ForegroundColor White
-                    Write-Host "       docker logs ollama" -ForegroundColor Cyan
+                    Write-Host "       $($script:containerCmd) logs ollama" -ForegroundColor Cyan
                     Write-Host "     * Retry manually:" -ForegroundColor White
-                    Write-Host "       docker exec -it ollama ollama pull $model" -ForegroundColor Cyan
+                    Write-Host "       $($script:containerCmd) exec -it ollama ollama pull $model" -ForegroundColor Cyan
                     Write-Host ""
                 }
             }
@@ -691,10 +948,10 @@ if ($downloadModel -eq "" -or $downloadModel -eq "Y" -or $downloadModel -eq "y")
                 Write-Host "    [X] Failed: $failCount" -ForegroundColor Red
             }
         }
-        
+
         Write-Host ""
         Write-Host "  >> You can download additional models later with:" -ForegroundColor Cyan
-        Write-Host "     docker exec -it ollama ollama pull [model-name]" -ForegroundColor DarkGray
+        Write-Host "     $($script:containerCmd) exec -it ollama ollama pull [model-name]" -ForegroundColor DarkGray
     }
 }
 
@@ -705,14 +962,15 @@ Write-Host "=========================================================" -Foregrou
 Write-Host ""
 
 # Summary of what was accomplished
+$runtimeName = if ($script:ContainerRuntime -eq "podman") { "Podman" } else { "Docker" }
 Write-Host "  [COMPLETED]" -ForegroundColor Green
-Write-Host "     * Docker verified and running" -ForegroundColor White
+Write-Host "     * $runtimeName verified and running" -ForegroundColor White
 Write-Host "     * Configuration files prepared (.env and docker-compose.yml)" -ForegroundColor White
 Write-Host "     * Containers started: ollama, n8n, open-webui, postgres" -ForegroundColor White
 
 $modelCount = 0
 try {
-    $modelList = docker exec ollama ollama list 2>$null
+    $modelList = & $script:containerCmd exec ollama ollama list 2>$null
     if ($modelList) {
         $modelCount = ($modelList | Select-String -Pattern ":" -AllMatches).Count
     }

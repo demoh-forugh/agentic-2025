@@ -1,0 +1,11 @@
+# Podman GPU override using NVIDIA CDI (Container Device Interface)
+# This file is used when Podman is detected with NVIDIA GPU support
+# Usage: podman-compose -f docker-compose.yml -f configs/docker-compose.podman-gpu.yml up -d
+services:
+  ollama:
+    # Podman uses CDI device notation for GPU access
+    devices:
+      - nvidia.com/gpu=all
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility

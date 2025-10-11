@@ -27,16 +27,17 @@
     Test smaller model with 10 warm iterations
 
 .NOTES
-    Version: 1.1.1
-    Last Updated: 2025-10-05
+    Version: 1.2.0
+    Last Updated: 2025-10-10
     Workshop: Go to Agentic Conference 2025
-    Requires: Docker with Ollama container running
+    Requires: Docker or Podman with Ollama container running
 #>
 
 # n8n Workshop - Cold vs Warm Start Performance Measurement
-# Version: 1.1.1
-# Last Updated: 2025-10-05
+# Version: 1.2.0
+# Last Updated: 2025-10-10
 # Workshop: Go to Agentic Conference 2025
+# Supports: Docker Desktop, Podman
 
 param(
     [string]$Model = "llama3.2:3b",
@@ -47,6 +48,44 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+
+# Detect container runtime
+$script:ContainerRuntime = $null
+$script:containerCmd = $null
+$script:composeCmd = $null
+
+function Test-CommandExists {
+    param($command)
+    $null = Get-Command $command -ErrorAction SilentlyContinue
+    return $?
+}
+
+if (Test-CommandExists docker) {
+    $script:ContainerRuntime = "docker"
+    $script:containerCmd = "docker"
+} elseif (Test-CommandExists podman) {
+    $script:ContainerRuntime = "podman"
+    $script:containerCmd = "podman"
+} else {
+    Write-Host "[X] Neither Docker nor Podman is installed!" -ForegroundColor Red
+    Write-Host "Please install Docker Desktop or Podman and run setup script." -ForegroundColor Yellow
+    exit 1
+}
+
+# Determine compose command
+if ($script:ContainerRuntime -eq "podman") {
+    if (Test-CommandExists podman-compose) {
+        $script:composeCmd = "podman-compose"
+    } else {
+        $script:composeCmd = "podman compose"
+    }
+} else {
+    if (Test-CommandExists docker-compose) {
+        $script:composeCmd = "docker-compose"
+    } else {
+        $script:composeCmd = "docker compose"
+    }
+}
 
 function Show-Banner {
     param([string]$Text)
@@ -227,10 +266,9 @@ function Get-GPUStats {
 }
 
 function Get-ContainerStats {
-    $dockerCmd = Get-Command docker -ErrorAction SilentlyContinue
-    if (-not $dockerCmd) { return $null }
+    if (-not $script:containerCmd) { return $null }
     try {
-        return & docker stats --no-stream --format "{{.Name}}`t{{.CPUPerc}}`t{{.MemUsage}}" 2>$null
+        return & $script:containerCmd stats --no-stream --format "{{.Name}}`t{{.CPUPerc}}`t{{.MemUsage}}" 2>$null
     } catch {
         return $null
     }
@@ -289,7 +327,8 @@ function Stop-OllamaModel {
 
 $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 
-Show-Banner "Cold vs Warm Start Measurement v1.1.1"
+Show-Banner "Cold vs Warm Start Measurement v1.2.0"
+Write-Host "Container Runtime: $($script:ContainerRuntime)" -ForegroundColor Cyan
 Write-Host "Timestamp: $timestamp" -ForegroundColor Yellow
 Write-Host "Model: $Model" -ForegroundColor Yellow
 Write-Host ""
@@ -308,14 +347,14 @@ try {
     Write-Host "ERROR: Cannot connect to Ollama at $OllamaHost" -ForegroundColor Red
     Write-Host ""
     Write-Host "Troubleshooting steps:" -ForegroundColor Yellow
-    Write-Host "  1. Ensure Docker containers are running:" -ForegroundColor White
-    Write-Host "     docker-compose ps" -ForegroundColor Gray
+    Write-Host "  1. Ensure containers are running:" -ForegroundColor White
+    Write-Host "     $($script:composeCmd) ps" -ForegroundColor Gray
     Write-Host "  2. Check if Ollama container is healthy:" -ForegroundColor White
-    Write-Host "     docker ps | findstr ollama" -ForegroundColor Gray
+    Write-Host "     $($script:containerCmd) ps | findstr ollama" -ForegroundColor Gray
     Write-Host "  3. Check Ollama container logs:" -ForegroundColor White
-    Write-Host "     docker logs ollama" -ForegroundColor Gray
+    Write-Host "     $($script:containerCmd) logs ollama" -ForegroundColor Gray
     Write-Host "  4. Try restarting containers:" -ForegroundColor White
-    Write-Host "     docker-compose restart ollama" -ForegroundColor Gray
+    Write-Host "     $($script:composeCmd) restart ollama" -ForegroundColor Gray
     Write-Host ""
     exit 1
 }
@@ -344,7 +383,7 @@ if (-not $modelExists) {
     }
     Write-Host ""
     Write-Host "To download the model:" -ForegroundColor Yellow
-    Write-Host "  docker exec -it ollama ollama pull $Model" -ForegroundColor White
+    Write-Host "  $($script:containerCmd) exec -it ollama ollama pull $Model" -ForegroundColor White
     Write-Host ""
     Write-Host "Or specify a different model with:" -ForegroundColor Yellow
     Write-Host "  .\scripts\measure-cold-warm-windows.ps1 -Model 'llama3.2'" -ForegroundColor White
@@ -357,9 +396,14 @@ if (-not $modelExists) {
 # Check 3: Disk space
 Write-Host "Checking available disk space..." -NoNewline
 try {
-    $dockerInfo = docker info --format '{{.DockerRootDir}}' 2>$null
-    if ($dockerInfo) {
-        $drive = Split-Path -Qualifier $dockerInfo
+    if ($script:ContainerRuntime -eq "podman") {
+        $runtimeInfo = & $script:containerCmd info --format '{{.Store.GraphRoot}}' 2>$null
+    } else {
+        $runtimeInfo = & $script:containerCmd info --format '{{.DockerRootDir}}' 2>$null
+    }
+
+    if ($runtimeInfo) {
+        $drive = Split-Path -Qualifier $runtimeInfo
         if ($drive) {
             $disk = Get-PSDrive -Name $drive.TrimEnd(':') -ErrorAction SilentlyContinue
             if ($disk -and $disk.Free) {
@@ -395,7 +439,7 @@ Write-Host ""
 
 $baselineContainers = Get-ContainerStats
 if ($baselineContainers) {
-    Write-Host "Docker Container Stats (Before):" -ForegroundColor Green
+    Write-Host "Container Stats (Before):" -ForegroundColor Green
     $baselineContainers | ForEach-Object { Write-Host "  $_" }
     Write-Host ""
 }
@@ -513,7 +557,7 @@ if ($warmTimes.Count -gt 0) {
 
 $containerAfter = Get-ContainerStats
 if ($containerAfter) {
-    Write-Host "Docker Container Stats (After):" -ForegroundColor Green
+    Write-Host "Container Stats (After):" -ForegroundColor Green
     $containerAfter | ForEach-Object { Write-Host "  $_" }
     Write-Host ""
 }

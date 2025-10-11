@@ -3,7 +3,7 @@
     n8n Workshop - Installation Verification Script
 
 .DESCRIPTION
-    Verifies that all Docker containers, ports, and services are running correctly.
+    Verifies that all container runtime (Docker/Podman), containers, ports, and services are running correctly.
     Provides prioritized troubleshooting guidance if issues are found.
 
 .EXAMPLE
@@ -11,20 +11,62 @@
     Run verification checks
 
 .NOTES
-    Version: 1.1.1
-    Last Updated: 2025-10-05
+    Version: 1.2.0
+    Last Updated: 2025-10-10
     Workshop: Go to Agentic Conference 2025
-    Requires: Docker Desktop running
+    Requires: Docker Desktop or Podman running
 #>
 
 # n8n Workshop - Installation Verification Script
-# Version: 1.1.1
-# Last Updated: 2025-10-05
+# Version: 1.2.0
+# Last Updated: 2025-10-10
 # Workshop: Go to Agentic Conference 2025
+# Supports: Docker Desktop, Podman
 
 Write-Host "===================================================" -ForegroundColor Cyan
-Write-Host "   Installation Verification v1.1.1" -ForegroundColor Cyan
+Write-Host "   Installation Verification v1.2.0" -ForegroundColor Cyan
 Write-Host "===================================================" -ForegroundColor Cyan
+Write-Host ""
+
+# Detect container runtime
+$script:ContainerRuntime = $null
+$script:containerCmd = $null
+$script:composeCmd = $null
+
+function Test-CommandExists {
+    param($command)
+    $null = Get-Command $command -ErrorAction SilentlyContinue
+    return $?
+}
+
+if (Test-CommandExists docker) {
+    $script:ContainerRuntime = "docker"
+    $script:containerCmd = "docker"
+} elseif (Test-CommandExists podman) {
+    $script:ContainerRuntime = "podman"
+    $script:containerCmd = "podman"
+} else {
+    Write-Host "[X] Neither Docker nor Podman is installed!" -ForegroundColor Red
+    Write-Host "Please install Docker Desktop or Podman and run setup script." -ForegroundColor Yellow
+    exit 1
+}
+
+# Determine compose command
+if ($script:ContainerRuntime -eq "podman") {
+    if (Test-CommandExists podman-compose) {
+        $script:composeCmd = "podman-compose"
+    } else {
+        $script:composeCmd = "podman compose"
+    }
+} else {
+    if (Test-CommandExists docker-compose) {
+        $script:composeCmd = "docker-compose"
+    } else {
+        $script:composeCmd = "docker compose"
+    }
+}
+
+Write-Host "Container Runtime: $($script:ContainerRuntime)" -ForegroundColor Cyan
 Write-Host ""
 
 $allGood = $true
@@ -53,23 +95,27 @@ function Write-Check {
     }
 }
 
-# 1. Check Docker daemon (CRITICAL)
-Write-Host "Checking Docker..." -ForegroundColor Yellow
+# 1. Check container runtime (CRITICAL)
+Write-Host "Checking $($script:ContainerRuntime)..." -ForegroundColor Yellow
 try {
-    docker ps | Out-Null
-    Write-Check "Docker daemon is running" $true $true
+    & $script:containerCmd ps | Out-Null
+    Write-Check "$($script:ContainerRuntime) is running" $true $true
 } catch {
-    Write-Check "Docker daemon is not running" $false $true
+    Write-Check "$($script:ContainerRuntime) is not running" $false $true
 }
 
-# Additional Docker health check
+# Additional runtime health check
 try {
-    $dockerVersion = docker version --format '{{.Server.Version}}' 2>$null
-    if ($dockerVersion) {
-        Write-Check "Docker daemon is responsive (v$dockerVersion)" $true
+    if ($script:ContainerRuntime -eq "podman") {
+        $runtimeVersion = & $script:containerCmd version --format '{{.Client.Version}}' 2>$null
+    } else {
+        $runtimeVersion = & $script:containerCmd version --format '{{.Server.Version}}' 2>$null
+    }
+    if ($runtimeVersion) {
+        Write-Check "$($script:ContainerRuntime) is responsive (v$runtimeVersion)" $true
     }
 } catch {
-    Write-Check "Docker daemon is not responding properly" $false $true
+    Write-Check "$($script:ContainerRuntime) is not responding properly" $false $true
 }
 
 # 2. Check containers
@@ -88,13 +134,13 @@ $stoppedContainers = @()
 $missingContainers = @()
 
 foreach ($containerName in $containers.Keys) {
-    $running = docker ps --filter "name=$containerName" --format "{{.Names}}" 2>$null | Select-String -Pattern "^$containerName$" -Quiet
+    $running = & $script:containerCmd ps --filter "name=$containerName" --format "{{.Names}}" 2>$null | Select-String -Pattern "^$containerName$" -Quiet
     if ($running) {
         Write-Check "Container '$containerName' ($($containers[$containerName])) is running" $true
         $runningContainers += $containerName
     } else {
         # Check if it exists but is stopped
-        $exists = docker ps -a --filter "name=$containerName" --format "{{.Names}}" 2>$null | Select-String -Pattern "^$containerName$" -Quiet
+        $exists = & $script:containerCmd ps -a --filter "name=$containerName" --format "{{.Names}}" 2>$null | Select-String -Pattern "^$containerName$" -Quiet
         if ($exists) {
             Write-Check "Container '$containerName' exists but is NOT running" $false $true
             $stoppedContainers += $containerName
@@ -121,7 +167,7 @@ foreach ($port in $ports.Keys) {
     $containerName = $serviceInfo.Container
 
     # Check if port is mapped in container
-    $portMapping = docker port $containerName 2>$null | Select-String -Pattern "$port"
+    $portMapping = & $script:containerCmd port $containerName 2>$null | Select-String -Pattern "$port"
     if ($portMapping) {
         Write-Check "Port $port ($($serviceInfo.Service)) mapped correctly: $portMapping" $true
     } else {
@@ -159,7 +205,7 @@ try {
             Write-Host "      * llama3.2:1b (1GB) - Fast, for testing" -ForegroundColor Cyan
             Write-Host "      * llama3.2 (4GB) - Recommended for workshop" -ForegroundColor Cyan
             Write-Host "      * mistral (4GB) - Good for coding" -ForegroundColor Cyan
-            Write-Host "    Download with: docker exec -it ollama ollama pull llama3.2" -ForegroundColor White
+            Write-Host "    Download with: $($script:containerCmd) exec -it ollama ollama pull llama3.2" -ForegroundColor White
             Write-Host ""
         }
     }
@@ -189,7 +235,7 @@ try {
 
 # Check PostgreSQL (port check only, not HTTP)
 try {
-    $pgPort = docker port postgres 5432 2>$null
+    $pgPort = & $script:containerCmd port postgres 5432 2>$null
     if ($pgPort) {
         Write-Check "PostgreSQL port is mapped: $pgPort" $true
     } else {
@@ -199,20 +245,20 @@ try {
     Write-Check "Could not verify PostgreSQL port" $false $false
 }
 
-# 5. Check Docker network
+# 5. Check container network
 Write-Host ""
-Write-Host "Checking Docker network..." -ForegroundColor Yellow
+Write-Host "Checking container network..." -ForegroundColor Yellow
 
-$network = docker network ls --filter "name=ai-network" --format "{{.Name}}" 2>$null | Select-String -Pattern "ai-network" -Quiet
+$network = & $script:containerCmd network ls --filter "name=ai-network" --format "{{.Name}}" 2>$null | Select-String -Pattern "ai-network" -Quiet
 if ($network) {
-    Write-Check "Docker network 'ai-network' exists" $true
+    Write-Check "Container network 'ai-network' exists" $true
 } else {
-    Write-Check "Docker network 'ai-network' does NOT exist" $false $false
+    Write-Check "Container network 'ai-network' does NOT exist" $false $false
 }
 
 # 6. Check volumes
 Write-Host ""
-Write-Host "Checking Docker volumes..." -ForegroundColor Yellow
+Write-Host "Checking volumes..." -ForegroundColor Yellow
 
 $volumes = @{
     "ollama_data" = "Ollama models and config"
@@ -222,7 +268,7 @@ $volumes = @{
 }
 
 foreach ($volumeName in $volumes.Keys) {
-    $exists = docker volume ls --format "{{.Name}}" 2>$null | Select-String -Pattern $volumeName -Quiet
+    $exists = & $script:containerCmd volume ls --format "{{.Name}}" 2>$null | Select-String -Pattern $volumeName -Quiet
     if ($exists) {
         Write-Check "Volume '$volumeName' ($($volumes[$volumeName])) exists" $true
     } else {
@@ -235,7 +281,7 @@ Write-Host ""
 Write-Host "Checking disk space..." -ForegroundColor Yellow
 
 try {
-    $dfOutput = docker system df --format "table {{.Type}}\t{{.TotalCount}}\t{{.Size}}\t{{.Reclaimable}}"
+    $dfOutput = & $script:containerCmd system df --format "table {{.Type}}\t{{.TotalCount}}\t{{.Size}}\t{{.Reclaimable}}"
     Write-Host $dfOutput -ForegroundColor Gray
 } catch {
     Write-Host "Could not check disk space" -ForegroundColor Yellow
@@ -246,7 +292,7 @@ Write-Host ""
 Write-Host "Checking container resource usage..." -ForegroundColor Yellow
 
 try {
-    $stats = docker stats --no-stream --format "table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}"
+    $stats = & $script:containerCmd stats --no-stream --format "table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}"
     Write-Host $stats -ForegroundColor Gray
 } catch {
     Write-Host "Could not retrieve container stats" -ForegroundColor Yellow
@@ -282,12 +328,18 @@ if ($allGood) {
         Write-Host "[CRITICAL] Fix these issues first:" -ForegroundColor Red
         Write-Host ""
 
-        # Priority 1: Docker daemon not running
-        if ($criticalFailures -match "Docker daemon") {
-            Write-Host "1. Docker daemon is not running" -ForegroundColor Red
-            Write-Host "   -> Start Docker Desktop from Windows Start Menu" -ForegroundColor Yellow
-            Write-Host "   -> Wait 30-60 seconds for Docker to fully initialize" -ForegroundColor Yellow
-            Write-Host "   -> Look for Docker icon in system tray (whale icon)" -ForegroundColor Yellow
+        # Priority 1: Container runtime not running
+        if ($criticalFailures -match "$($script:ContainerRuntime).*not running") {
+            Write-Host "1. $($script:ContainerRuntime) is not running" -ForegroundColor Red
+            if ($script:ContainerRuntime -eq "docker") {
+                Write-Host "   -> Start Docker Desktop from Windows Start Menu" -ForegroundColor Yellow
+                Write-Host "   -> Wait 30-60 seconds for Docker to fully initialize" -ForegroundColor Yellow
+                Write-Host "   -> Look for Docker icon in system tray (whale icon)" -ForegroundColor Yellow
+            } else {
+                Write-Host "   -> Start Podman machine: podman machine start" -ForegroundColor Yellow
+                Write-Host "   -> Wait for machine to fully initialize" -ForegroundColor Yellow
+                Write-Host "   -> Check status: podman machine list" -ForegroundColor Yellow
+            }
             Write-Host "   -> If issues persist, restart your computer" -ForegroundColor Yellow
             Write-Host ""
         }
@@ -295,15 +347,15 @@ if ($allGood) {
         # Priority 2: Containers not running
         if ($stoppedContainers.Count -gt 0) {
             Write-Host "2. Containers exist but are stopped: $($stoppedContainers -join ', ')" -ForegroundColor Red
-            Write-Host "   -> Start them with: docker start $($stoppedContainers -join ' ')" -ForegroundColor Yellow
-            Write-Host "   -> Or restart all services: docker-compose restart" -ForegroundColor Yellow
+            Write-Host "   -> Start them with: $($script:containerCmd) start $($stoppedContainers -join ' ')" -ForegroundColor Yellow
+            Write-Host "   -> Or restart all services: $($script:composeCmd) restart" -ForegroundColor Yellow
             Write-Host ""
         }
 
         if ($missingContainers.Count -gt 0) {
             Write-Host "2. Containers are missing: $($missingContainers -join ', ')" -ForegroundColor Red
             Write-Host "   -> Run setup script: .\scripts\setup-windows.ps1" -ForegroundColor Yellow
-            Write-Host "   -> Or manually start: docker-compose up -d" -ForegroundColor Yellow
+            Write-Host "   -> Or manually start: $($script:composeCmd) up -d" -ForegroundColor Yellow
             Write-Host ""
         }
 
@@ -313,8 +365,8 @@ if ($allGood) {
             Write-Host "   -> Check for port conflicts:" -ForegroundColor Yellow
             Write-Host "     netstat -ano | findstr `":5678 :3000 :11434 :5432`"" -ForegroundColor Gray
             Write-Host "   -> Check container logs:" -ForegroundColor Yellow
-            Write-Host "     docker-compose logs [service-name]" -ForegroundColor Gray
-            Write-Host "   -> Restart containers: docker-compose restart" -ForegroundColor Yellow
+            Write-Host "     $($script:composeCmd) logs [service-name]" -ForegroundColor Gray
+            Write-Host "   -> Restart containers: $($script:composeCmd) restart" -ForegroundColor Yellow
             Write-Host ""
         }
 
@@ -323,9 +375,9 @@ if ($allGood) {
             Write-Host "4. HTTP endpoints are not responding" -ForegroundColor Red
             Write-Host "   -> Containers may still be initializing (wait 30s and retry)" -ForegroundColor Yellow
             Write-Host "   -> Check container logs for errors:" -ForegroundColor Yellow
-            Write-Host "     docker-compose logs -f" -ForegroundColor Gray
+            Write-Host "     $($script:composeCmd) logs -f" -ForegroundColor Gray
             Write-Host "   -> Verify containers are healthy:" -ForegroundColor Yellow
-            Write-Host "     docker ps" -ForegroundColor Gray
+            Write-Host "     $($script:containerCmd) ps" -ForegroundColor Gray
             Write-Host ""
         }
     }
@@ -341,9 +393,9 @@ if ($allGood) {
 
     Write-Host "[HELP] Additional Help:" -ForegroundColor Cyan
     Write-Host "  * Troubleshooting guide: docs\TROUBLESHOOTING.md" -ForegroundColor White
-    Write-Host "  * Check logs: docker-compose logs -f" -ForegroundColor White
-    Write-Host "  * View container status: docker-compose ps" -ForegroundColor White
-    Write-Host "  * Restart services: docker-compose restart" -ForegroundColor White
+    Write-Host "  * Check logs: $($script:composeCmd) logs -f" -ForegroundColor White
+    Write-Host "  * View container status: $($script:composeCmd) ps" -ForegroundColor White
+    Write-Host "  * Restart services: $($script:composeCmd) restart" -ForegroundColor White
     Write-Host ""
 
     exit 1
