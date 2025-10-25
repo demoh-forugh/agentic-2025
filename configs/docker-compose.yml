@@ -2,6 +2,7 @@ services:
   # Ollama - Local LLM Runtime
   ollama:
     image: ollama/ollama:latest
+    pull_always: true
     container_name: ollama
     ports:
       - "11434:11434"
@@ -19,7 +20,8 @@ services:
 
   # OpenWebUI - Beautiful Chat Interface
   open-webui:
-    image: ghcr.io/open-webui/open-webui:main
+    image: ghcr.io/open-webui/open-webui:latest
+    pull_always: true
     container_name: open-webui
     ports:
       - "3000:8080"
@@ -43,6 +45,7 @@ services:
   # n8n - Workflow Automation & Agent Orchestration
   n8n:
     image: n8nio/n8n:latest
+    pull_always: true
     container_name: n8n
     ports:
       - "5678:5678"
@@ -54,6 +57,8 @@ services:
       - NODE_ENV=production
       - WEBHOOK_URL=${WEBHOOK_URL:-http://localhost:5678/}
       - GENERIC_TIMEZONE=${TIMEZONE:-America/New_York}
+      # Ignore TLS certificate warnings (for development/testing)
+      - NODE_TLS_REJECT_UNAUTHORIZED=0
       # Ollama connection
       - OLLAMA_HOST=http://ollama:11434
       # Pre-configure Ollama and PostgreSQL credentials for users (no manual setup needed!)
@@ -65,6 +70,7 @@ services:
       - n8n_data:/home/node/.n8n
       - ./workflows:/workflows:ro
       - ./configs/n8n-credentials-overwrite.json:/data/credentials-overwrite.json:ro
+      - ./shared:/shared
     depends_on:
       - ollama
     restart: unless-stopped
@@ -79,11 +85,12 @@ services:
 
   # PostgreSQL - Open Source Database for n8n and Business Data
   postgres:
-    image: postgres:15-alpine
+    image: postgres:latest
+    pull_always: true
     container_name: postgres
     environment:
       - POSTGRES_USER=workshop
-      - POSTGRES_PASSWORD=workshop_password
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-WORKSHOP_DB_PASSWORD_PLACEHOLDER}
       - POSTGRES_DB=workshop_db
     ports:
       - "5432:5432"

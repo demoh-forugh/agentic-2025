@@ -657,12 +657,24 @@ if ($existingContainers.Count -gt 0) {
     $restart = Read-Host "Restart containers? (y/N)"
 
     if ($restart -eq "y" -or $restart -eq "Y") {
-        Write-Status "Restarting containers..." "INFO"
+        Write-Status "Recreating containers with updated configuration..." "INFO"
+        Write-Host "  >> Stopping and removing existing containers..." -ForegroundColor Cyan
         try {
-            Invoke-Compose @composeArgs restart 2>&1 | Out-Null
-            Write-Status "Containers restarted successfully!" "SUCCESS"
+            # Use down + up instead of restart to properly apply device configurations like GPU
+            Invoke-Compose @composeArgs down 2>&1 | Out-Null
+            if ($LASTEXITCODE -eq 0) {
+                Write-Status "Containers stopped" "SUCCESS"
+            }
+
+            Write-Host "  >> Starting containers with GPU configuration..." -ForegroundColor Cyan
+            Invoke-Compose @composeArgs up --detach 2>&1 | Out-Null
+            if ($LASTEXITCODE -eq 0) {
+                Write-Status "Containers recreated successfully with GPU support!" "SUCCESS"
+            } else {
+                throw "compose up failed with exit code $LASTEXITCODE"
+            }
         } catch {
-            Write-Status "Failed to restart containers." "ERROR"
+            Write-Status "Failed to recreate containers." "ERROR"
             Write-Host ""
             Write-Host "  >> Troubleshooting Steps:" -ForegroundColor Yellow
             Write-Host "     1. Check logs:" -ForegroundColor White
@@ -810,7 +822,14 @@ if ($downloadModel -eq "" -or $downloadModel -eq "Y" -or $downloadModel -eq "y")
         if ($existingModels) {
             Write-Host ""
             Write-Host "Currently installed models:" -ForegroundColor Cyan
-            Write-Host $existingModels
+            Write-Host ""
+            # Format the table properly by displaying each line separately
+            foreach ($line in $existingModels) {
+                if ($line -match "NAME" -or $line -match "^[A-Za-z]") {
+                    # Header line or model line
+                    Write-Host "  $line" -ForegroundColor White
+                }
+            }
             Write-Host ""
         }
     } catch {

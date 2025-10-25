@@ -26,8 +26,8 @@ Get up and running in 15 minutes! ⚡
 
 ```powershell
 # If you have git
-git clone <workshop-repo-url>
-cd open-source-setup
+git clone https://github.com/demoh-forugh/agentic-2025.git
+cd agentic-2025
 
 # Or download and extract ZIP file
 ```
@@ -52,7 +52,7 @@ $env:ENABLE_LOGGING="1"
 3. Open Terminal (Spotlight: `Cmd + Space`, type "Terminal")
 4. Navigate to where you downloaded the workshop files:
    ```bash
-   cd ~/Downloads/demos  # Adjust to your actual path
+   cd ~/Downloads/agentic-2025  # Adjust to your actual path
    ```
 
 **Run Setup:**
@@ -78,6 +78,7 @@ ENABLE_LOGGING=1 ./scripts/setup-mac.sh
 - ✓ Download an LLM model (optional, skips if already present)
 - ✓ Provide detailed troubleshooting if anything fails
 - ✓ **Enhanced visual output** with color-coded status messages and emojis for easy reading
+- ✓ **Always pull latest images** with the pull_always directive to ensure you're using the latest versions
 
 **Key Features:**
 - **Smart Model Recommendations**: Analyzes your RAM, CPU, and GPU to suggest the right model
@@ -200,7 +201,7 @@ Once running, open these in your browser:
 
 1. Go to http://localhost:3000
 2. Click "**Sign Up**" (data stored locally, no external account needed)
-3. Create an account with any email (e.g., `user@example.com`)
+3. Create an account with any email (use a placeholder email for testing)
 4. Select your model from dropdown (e.g., `llama3.2` or `llama3.2:1b`)
 5. Type a test message: "What is AI automation?"
 6. See your LLM respond! ✅
@@ -280,7 +281,7 @@ When you import workflows, n8n will prompt you to create credentials. The connec
 - Port: `5432` ← Pre-filled
 - Database: `workshop_db` ← Pre-filled
 - User: `workshop` ← Pre-filled
-- Password: `workshop_password` ← Pre-filled
+- Password: Use a secure password (see Security section below)
 - Just click Save when creating the credential!
 
 **You create each credential once, then all workflows use them automatically.** No need to re-enter connection details for every workflow!
@@ -293,8 +294,8 @@ When you import workflows, n8n will prompt you to create credentials. The connec
 
 #### Windows
 ```powershell
-# Start everything
-docker-compose up -d
+# Start everything (pulls latest images)
+docker-compose pull && docker-compose up -d
 
 # Stop everything
 docker-compose down
@@ -312,8 +313,8 @@ docker-compose ps
 
 #### macOS/Linux
 ```bash
-# Start everything
-docker-compose up -d
+# Start everything (pulls latest images)
+docker-compose pull && docker-compose up -d
 
 # Stop everything
 docker-compose down
@@ -390,6 +391,49 @@ docker system prune
 ```
 
 ---
+## Security Best Practices
+
+### Using Environment Variables for Credentials
+
+For security in production environments, use environment variables instead of hardcoded credentials:
+
+1. **Create a secure .env file** (never commit this to version control):
+   ```bash
+   # Copy the example file
+   cp configs/.env.example .env
+   
+   # Edit with your secure credentials
+   nano .env  # or use your preferred editor
+   ```
+
+2. **Set secure passwords** in your .env file:
+   ```bash
+   # Database credentials
+   POSTGRES_PASSWORD=your_strong_password_here
+   
+   # Other credentials
+   GOOGLE_CLIENT_SECRET=your_google_secret_here
+   ```
+
+3. **Reference environment variables** in docker-compose.yml:
+   ```yaml
+   environment:
+     - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+   ```
+
+4. **Password recommendations**:
+   - Use at least 12 characters
+   - Mix uppercase, lowercase, numbers, and symbols
+   - Avoid dictionary words and personal information
+   - Use a password manager to generate and store passwords
+
+5. **For n8n workflows**:
+   - Store sensitive values as n8n credentials
+   - Use expressions to access environment variables: `{{ $env.SECRET_NAME }}`
+   - Avoid hardcoding secrets in workflow nodes
+
+These environment variables will be automatically picked up by Docker Compose and passed to your containers.
+
 ## Next Steps
 
 ### Configure Google APIs (15 minutes)
@@ -557,7 +601,7 @@ This is provided as-is. No warranty is expressed or implied. But I hope it works
 
 For community support, visit:
 - [n8n Community](https://community.n8n.io/)
-- [Ollama Community](https://discord.gg/ollama)
+- [Ollama GitHub](https://github.com/ollama/ollama)
 - [OpenWebUI GitHub](https://github.com/open-webui/open-webui)
 
 ---
@@ -644,8 +688,8 @@ docker exec -it n8n sh
    - Windows: `.\scripts\verify-windows.ps1`
    - macOS/Linux: `./scripts/verify-mac.sh`
 3. **Check logs**: `docker-compose logs -f`
-4. **Ask for help**: Workshop Discord or email
-5. **Search community**: [community.n8n.io](https://community.n8n.io/)
+4. **Search community**: [community.n8n.io](https://community.n8n.io/)
+5. **Check GitHub issues**: [GitHub repository issues](https://github.com/demoh-forugh/agentic-2025/issues)
 
 ---
 

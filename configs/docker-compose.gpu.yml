@@ -1,4 +1,4 @@
-# Optional GPU override for Ollama. This file is only used when included
+# Optional GPU override for Ollama and OpenWebUI. This file is only used when included
 # alongside the base compose file, e.g.:
 #   docker compose -f docker-compose.yml -f configs/docker-compose.gpu.yml up -d
 # The Windows setup script will auto-include this when an NVIDIA GPU is detected.
@@ -10,8 +10,48 @@ services:
         reservations:
           devices:
             - driver: nvidia
-              count: 1
+              count: all
               capabilities: [gpu]
+        limits:
+          memory: 16G                       # Max 16GB RAM
+          cpus: '8.0'                       # Max 8 CPU cores
+        reservations:
+          memory: 8G                        # Reserve 8GB RAM
+          cpus: '4.0'                       # Reserve 4 CPU cores
+    environment:
+      # NVIDIA GPU settings
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      - CUDA_VISIBLE_DEVICES=0
+
+      # Performance optimizations (tuned for RTX PRO 4000 16GB + 24 CPU cores)
+      - OLLAMA_KEEP_ALIVE=-1                # Keep models loaded indefinitely
+      - OLLAMA_NUM_PARALLEL=8               # 8 concurrent requests per model
+      - OLLAMA_MAX_LOADED_MODELS=2          # Load up to 2 models at once
+      - OLLAMA_FLASH_ATTENTION=1            # Enable Flash Attention
+      - OLLAMA_NUM_THREAD=24                # 24 CPU threads
+      - OLLAMA_KV_CACHE_TYPE=q8_0           # 8-bit quantized cache (halves memory)
+      - OLLAMA_MAX_QUEUE=100                # Queue up to 100 requests
+      - OLLAMA_HOST=0.0.0.0:11434          # Bind to all interfaces
+
+    # Shared memory for parallel processing
+    shm_size: '2gb'
+
+  open-webui:
+    # OpenWebUI can also benefit from GPU acceleration
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+        limits:
+          memory: 4G
+          cpus: '4.0'
+        reservations:
+          memory: 2G
+          cpus: '2.0'
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility

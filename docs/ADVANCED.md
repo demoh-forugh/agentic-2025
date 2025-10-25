@@ -184,29 +184,50 @@ n8n-worker-2:
 
 ### 3. Optimize Ollama Performance
 
-**Use GPU acceleration**:
+**GPU Acceleration and Performance Tuning:**
 
-```yaml
-ollama:
-  deploy:
-    resources:
-      reservations:
-        devices:
-          - driver: nvidia
-            count: 1
-            capabilities: [gpu]
+This setup includes comprehensive GPU optimization. GPU configuration is handled automatically by setup scripts.
+
+**Windows/Podman:**
+```bash
+# Use GPU override file
+podman-compose -f configs/docker-compose.yml -f configs/docker-compose.podman-gpu.yml up -d
 ```
 
-**Tune model parameters**:
+**Docker:**
+```bash
+docker compose -f configs/docker-compose.yml -f configs/docker-compose.gpu.yml up -d
+```
+
+**Included Optimizations:**
+- `OLLAMA_KEEP_ALIVE=-1` - Models stay loaded indefinitely (zero cold starts)
+- `OLLAMA_NUM_PARALLEL=2` - Concurrent request handling (adjust per GPU)
+- `OLLAMA_MAX_LOADED_MODELS=1` - Load one model at a time for 8-16GB GPUs
+- `OLLAMA_FLASH_ATTENTION=1` - Optimized attention mechanism
+- `OLLAMA_KV_CACHE_TYPE=q8_0` - 50% memory reduction for KV cache
+
+**Model Parameter Tuning** (in n8n Ollama nodes):
 ```json
 {
-  "num_ctx": 2048,      // Context window (lower = faster)
-  "num_thread": 8,      // CPU threads
-  "num_gpu": 1,         // GPU layers
-  "repeat_penalty": 1.1,
-  "temperature": 0.7
+  "num_ctx": 4096,      // Context window (2048-8192)
+  "num_predict": 512,   // Max output tokens
+  "temperature": 0.7,   // Creativity (0-1)
+  "repeat_penalty": 1.1 // Avoid repetition
 }
 ```
+
+**Expected Performance** (RTX PRO 4000 16GB):
+- **Cold start**: 0s (models stay loaded)
+- **Average response**: 1-4 seconds depending on model
+- **Concurrent requests**: Up to 8 parallel (with NUM_PARALLEL=8)
+- **GPU utilization**: 80-95% during inference
+
+**See**: `docs/PERFORMANCE_OPTIMIZATION.md` for complete tuning guide with:
+- All 8 environment variables explained
+- Model selection and quantization guide
+- Troubleshooting GPU detection issues
+- Performance benchmarks and verification scripts
+- n8n integration best practices
 
 ### 4. Caching Strategies
 

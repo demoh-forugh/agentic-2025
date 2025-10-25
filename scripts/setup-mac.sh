@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # n8n Workshop - Automated Setup Script (macOS)
-# Version: 1.1.1
-# Last Updated: 2025-10-05
+# Version: 1.4.0
+# Last Updated: 2025-10-21
 # Workshop: Go to Agentic Conference 2025
 
 set -euo pipefail
@@ -101,7 +101,7 @@ detect_system_specs() {
 
 echo ""
 separator
-printf "\033[1;36m   🚀 n8n Workshop - Automated Setup Script v1.1.1\033[0m\n"
+printf "\033[1;36m   🚀 n8n Workshop - Automated Setup Script v1.4.0\033[0m\n"
 printf "\033[1;37m   Go to Agentic Conference 2025\033[0m\n"
 separator
 echo ""
@@ -233,6 +233,20 @@ echo ""
 
 compose_args=(-f docker-compose.yml)
 
+# GPU detection and configuration (for Docker on Mac with NVIDIA/AMD GPUs)
+# Note: For Apple Silicon Metal acceleration, use USE_HOST_OLLAMA=1 instead
+if [[ "${USE_HOST_OLLAMA:-0}" != "1" ]]; then
+  gpu_override_path="configs/docker-compose.gpu.yml"
+
+  if [[ "$HAS_GPU" == true ]] && [[ -f "$gpu_override_path" ]]; then
+    # Only add GPU support for non-Apple GPUs (NVIDIA/AMD) in containerized setup
+    if [[ ! "$GPU_NAME" =~ "Apple" ]]; then
+      info "Detected compatible GPU ($GPU_NAME). Enabling GPU acceleration."
+      compose_args+=( -f "$gpu_override_path" )
+    fi
+  fi
+fi
+
 # Optional: if using host-installed Ollama (Metal acceleration), point UI to host
 if [[ "${USE_HOST_OLLAMA:-0}" == "1" ]] && have ollama; then
   info "Host Ollama detected and USE_HOST_OLLAMA=1."
@@ -240,6 +254,7 @@ if [[ "${USE_HOST_OLLAMA:-0}" == "1" ]] && have ollama; then
     info "Using host Ollama via configs/docker-compose.ollama-host.yml"
     compose_args+=( -f configs/docker-compose.ollama-host.yml )
     info "Starting OpenWebUI, n8n, and postgres (no ollama container)"
+    info "Metal GPU acceleration via host Ollama (recommended for Apple Silicon)"
   else
     warn "configs/docker-compose.ollama-host.yml not found. Proceeding with standard setup."
   fi
@@ -271,11 +286,18 @@ if [[ ${#EXISTING_CONTAINERS[@]} -gt 0 ]]; then
   echo ""
 
   if [[ $REPLY =~ ^[Yy]$ ]]; then
-    info "Restarting containers..."
-    if "${COMPOSE[@]}" "${compose_args[@]}" restart; then
-      ok "Containers restarted successfully"
+    info "Recreating containers with updated configuration..."
+    echo "  >> Stopping and removing existing containers..."
+    # Use down + up instead of restart to properly apply device configurations like GPU
+    if "${COMPOSE[@]}" "${compose_args[@]}" down; then
+      ok "Containers stopped"
+    fi
+
+    echo "  >> Starting containers with configuration..."
+    if "${COMPOSE[@]}" "${compose_args[@]}" up --detach; then
+      ok "Containers recreated successfully!"
     else
-      err "Failed to restart containers"
+      err "Failed to recreate containers"
       echo ""
       echo "Troubleshooting steps:"
       echo "  1. Check logs: docker-compose logs -f"
@@ -533,7 +555,13 @@ if [[ ${#OLLAMA_CMD[@]} -gt 0 ]]; then
       if [[ -n "$EXISTING_MODELS" ]]; then
         echo ""
         printf "\033[1;36m📦 Currently installed models:\033[0m\n"
-        echo "$EXISTING_MODELS"
+        echo ""
+        # Format the table with proper indentation
+        echo "$EXISTING_MODELS" | while IFS= read -r line; do
+          if [[ "$line" =~ ^NAME || "$line" =~ ^[A-Za-z] ]]; then
+            printf "   \033[0;37m%s\033[0m\n" "$line"
+          fi
+        done
         echo ""
       fi
 

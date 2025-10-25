@@ -64,7 +64,7 @@ chmod +x ./scripts/setup-mac.sh ./scripts/verify-mac.sh ./scripts/measure-cold-w
 **Expected output:**
 ```
 =======================================================
-   n8n Workshop Setup Script v1.1.1 (macOS)
+   n8n Workshop Setup Script v1.4.0 (macOS)
 =======================================================
 
 [info] Checking Docker...
@@ -107,7 +107,7 @@ System Specifications:
 **Expected output:**
 ```
 =======================================================
-   Installation Verification v1.1.1
+   Installation Verification v1.4.0
 =======================================================
 
 [info] Checking Docker...
@@ -144,7 +144,7 @@ Your workshop environment is ready!
 
 **Test OpenWebUI:**
 1. Open: http://localhost:3000
-2. Create account (any email works, e.g., `test@example.com`)
+2. Create account (use a placeholder email for testing)
 3. Select model from dropdown (e.g., `llama3.2` or `llama3.2:1b`)
 4. Send test message: "What is AI automation?"
 5. Verify response appears
@@ -274,6 +274,6 @@ This feedback will help improve the Mac setup experience!
 
 ---
 
-**Last Updated:** 2025-10-05
-**Version:** 1.1.1
+**Last Updated:** 2025-10-22
+**Version:** 1.4.0
 **Target Conference:** Go to Agentic Conference 2025
