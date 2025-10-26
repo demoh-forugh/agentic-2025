@@ -926,7 +926,7 @@ Write-Host "---------------------------------------------------------" -Foregrou
 Write-Host "  CONTAINER STATUS" -ForegroundColor Cyan
 Write-Host "---------------------------------------------------------" -ForegroundColor DarkGray
 Write-Host ""
-Invoke-Compose ps
+& $script:containerCmd ps -a
 
 Write-Host ""
 Write-Host "---------------------------------------------------------" -ForegroundColor DarkGray
