@@ -546,13 +546,6 @@ if (-Not (Test-Path "docker-compose.yml")) {
     Write-Status "docker-compose.yml already exists (skipping)" "SUCCESS"
 }
 
-Write-Host ""
-
-# GPU detection and configuration
-$composeArgs = @('-f', 'docker-compose.yml')
-$gpuOverridePath = 'configs\docker-compose.gpu.yml'
-$podmanGpuOverridePath = 'configs\docker-compose.podman-gpu.yml'
-
 if ($script:ContainerRuntime -eq "podman") {
     # Podman GPU detection and CDI setup
     try {
@@ -636,18 +629,39 @@ if ($script:ContainerRuntime -eq "podman") {
 # Check if containers are already running (idempotency)
 Write-Host ""
 Write-Status "Checking for existing containers..." "INFO"
-$existingContainers = @()
 $requiredContainers = @("ollama", "n8n", "open-webui", "postgres")
 
+# Determine running and existing (all states)
+$runningContainers = @()
+$existingContainersAll = @()
 foreach ($containerName in $requiredContainers) {
-    $running = & $script:containerCmd ps --filter "name=$containerName" --format "{{.Names}}" 2>$null | Select-String -Pattern "^$containerName$" -Quiet
-    if ($running) {
-        $existingContainers += $containerName
-    }
+    $isRunning = & $script:containerCmd ps --filter "name=$containerName" --format "{{.Names}}" 2>$null | Select-String -Pattern "^$containerName$" -Quiet
+    if ($isRunning) { $runningContainers += $containerName }
+
+    $existsAny = & $script:containerCmd ps -a --filter "name=$containerName" --format "{{.Names}}" 2>$null | Select-String -Pattern "^$containerName$" -Quiet
+    if ($existsAny) { $existingContainersAll += $containerName }
 }
 
-if ($existingContainers.Count -gt 0) {
-    Write-Status "Found running containers: $($existingContainers -join ', ')" "SUCCESS"
+$stoppedContainers = $existingContainersAll | Where-Object { $_ -notin $runningContainers }
+
+if ($runningContainers.Count -gt 0) {
+    Write-Status "Found running containers: $($runningContainers -join ', ')" "SUCCESS"
+    if ($stoppedContainers.Count -gt 0) {
+        Write-Status "Also found stopped containers: $($stoppedContainers -join ', '). Starting them without recreate..." "WARNING"
+        $startOrder = @("postgres","ollama","n8n","open-webui")
+        foreach ($name in $startOrder) {
+            if ($stoppedContainers -contains $name) {
+                Write-Host "  >> Starting $name..." -ForegroundColor Cyan
+                & $script:containerCmd start $name 2>&1 | Out-Null
+                if ($LASTEXITCODE -eq 0) {
+                    Write-Status "$name started" "SUCCESS"
+                } else {
+                    Write-Status "Failed to start $name (exit $LASTEXITCODE). See logs." "ERROR"
+                }
+            }
+        }
+    }
+
     Write-Host ""
     Write-Host "  >> Containers are already running. Options:" -ForegroundColor Yellow
     Write-Host "     * Continue to use existing containers (recommended)" -ForegroundColor White
@@ -655,16 +669,12 @@ if ($existingContainers.Count -gt 0) {
     Write-Host ""
 
     $restart = Read-Host "Restart containers? (y/N)"
-
     if ($restart -eq "y" -or $restart -eq "Y") {
         Write-Status "Recreating containers with updated configuration..." "INFO"
         Write-Host "  >> Stopping and removing existing containers..." -ForegroundColor Cyan
         try {
-            # Use down + up instead of restart to properly apply device configurations like GPU
             Invoke-Compose @composeArgs down 2>&1 | Out-Null
-            if ($LASTEXITCODE -eq 0) {
-                Write-Status "Containers stopped" "SUCCESS"
-            }
+            if ($LASTEXITCODE -eq 0) { Write-Status "Containers stopped" "SUCCESS" }
 
             Write-Host "  >> Starting containers with GPU configuration..." -ForegroundColor Cyan
             Invoke-Compose @composeArgs up --detach 2>&1 | Out-Null
@@ -687,6 +697,22 @@ if ($existingContainers.Count -gt 0) {
         }
     } else {
         Write-Status "Using existing containers (no changes made)" "INFO"
+    }
+} elseif ($existingContainersAll.Count -gt 0) {
+    # Some or all containers exist but none are running: start them directly (no compose) to avoid name conflicts
+    Write-Status "Containers exist but are stopped: $($existingContainersAll -join ', ')" "WARNING"
+    Write-Host "  >> Starting existing containers without recreate..." -ForegroundColor Cyan
+    $startOrder = @("postgres","ollama","n8n","open-webui")
+    foreach ($name in $startOrder) {
+        if ($existingContainersAll -contains $name) {
+            Write-Host "  >> Starting $name..." -ForegroundColor Cyan
+            & $script:containerCmd start $name 2>&1 | Out-Null
+            if ($LASTEXITCODE -eq 0) {
+                Write-Status "$name started" "SUCCESS"
+            } else {
+                Write-Status "Failed to start $name (exit $LASTEXITCODE). See logs." "ERROR"
+            }
+        }
     }
 } else {
     # Start containers
