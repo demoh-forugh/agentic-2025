@@ -651,6 +651,42 @@ foreach ($containerName in $requiredContainers) {
 
 $stoppedContainers = $existingContainersAll | Where-Object { $_ -notin $runningContainers }
 
+# Special case: if postgres exists with old bind to examples/init-db.sql, recreate it with new config
+if ($existingContainersAll -contains "postgres") {
+    $needsRecreatePostgres = $false
+    try {
+        $pgMounts = & $script:containerCmd inspect --format '{{json .Mounts}}' postgres 2>$null
+        if ($pgMounts -and ($pgMounts -match "examples/init-db.sql" -or $pgMounts -match "examples\\\\init-db.sql")) {
+            $needsRecreatePostgres = $true
+        }
+    } catch {}
+
+    if ($needsRecreatePostgres) {
+        Write-Status "Updating postgres container to new init-db path..." "INFO"
+        try { & $script:containerCmd stop postgres 2>$null | Out-Null } catch {}
+        try { & $script:containerCmd rm postgres 2>$null | Out-Null } catch {}
+
+        try {
+            Invoke-Compose @composeArgs up -d postgres 2>&1 | Out-Null
+            if ($LASTEXITCODE -eq 0) {
+                Write-Status "postgres recreated with updated bind mount" "SUCCESS"
+                # Reflect that postgres now exists and may be running
+                $runningNow = & $script:containerCmd ps --filter "name=postgres" --format "{{.Names}}" 2>$null | Select-String -Pattern "^postgres$" -Quiet
+                if ($runningNow) {
+                    if ($runningContainers -notcontains "postgres") { $runningContainers += "postgres" }
+                    $stoppedContainers = $stoppedContainers | Where-Object { $_ -ne "postgres" }
+                } else {
+                    if ($stoppedContainers -notcontains "postgres") { $stoppedContainers += "postgres" }
+                }
+            } else {
+                Write-Status "Failed to recreate postgres (exit $LASTEXITCODE). See logs." "ERROR"
+            }
+        } catch {
+            Write-Status "Failed to recreate postgres. Error: $($_.Exception.Message)" "ERROR"
+        }
+    }
+}
+
 if ($runningContainers.Count -gt 0) {
     Write-Status "Found running containers: $($runningContainers -join ', ')" "SUCCESS"
     if ($stoppedContainers.Count -gt 0) {
