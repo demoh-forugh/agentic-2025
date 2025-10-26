@@ -553,6 +553,24 @@ if (-Not (Test-Path "scripts\init-db.sql")) {
     Write-Status "scripts\\init-db.sql not found. Created empty init file (safe for existing DB)." "WARNING"
 }
 
+$composeArgs = @('-f', 'docker-compose.yml')
+$gpuOverridePath = 'configs\docker-compose.gpu.yml'
+$podmanGpuOverridePath = 'configs\docker-compose.podman-gpu.yml'
+$gpuEnabled = $false
+
+function Test-ContainerHasGPU {
+    param([string]$Name)
+    try {
+        $ann = & $script:containerCmd inspect --format '{{index .Config.Annotations "io.kubernetes.cri-o.Devices"}}' $Name 2>$null
+        if ($ann -and ($ann -match 'nvidia.com/gpu')) { return $true }
+    } catch {}
+    try {
+        $env = & $script:containerCmd inspect --format '{{json .Config.Env}}' $Name 2>$null
+        if ($env -and ($env -match 'NVIDIA_VISIBLE_DEVICES=all' -or $env -match 'CUDA_VISIBLE_DEVICES')) { return $true }
+    } catch {}
+    return $false
+}
+
 if ($script:ContainerRuntime -eq "podman") {
     # Podman GPU detection and CDI setup
     try {
@@ -597,6 +615,7 @@ if ($script:ContainerRuntime -eq "podman") {
                         # Use Podman GPU compose file
                         if (Test-Path $podmanGpuOverridePath) {
                             $composeArgs += @('-f', $podmanGpuOverridePath)
+                            $gpuEnabled = $true
                         } else {
                             Write-Status "Podman GPU compose file not found. Using CPU-only mode." "WARNING"
                         }
@@ -611,7 +630,11 @@ if ($script:ContainerRuntime -eq "podman") {
             Write-Status "No NVIDIA GPU detected. Using CPU-only mode." "INFO"
         }
     } catch {
-        Write-Status "GPU detection failed. Using CPU-only mode." "WARNING"
+        if (-not $gpuEnabled) {
+            Write-Status "GPU detection failed. Using CPU-only mode." "WARNING"
+        } else {
+            Write-Status "GPU configured, minor issue detected during GPU check (continuing with GPU)." "WARNING"
+        }
     }
 } else {
     # Docker GPU detection
@@ -622,6 +645,7 @@ if ($script:ContainerRuntime -eq "podman") {
             if ($LASTEXITCODE -eq 0 -and (Test-Path $gpuOverridePath)) {
                 Write-Status "NVIDIA GPU detected. Enabling GPU acceleration." "INFO"
                 $composeArgs += @('-f', $gpuOverridePath)
+                $gpuEnabled = $true
             } else {
                 Write-Status "NVIDIA GPU not available or override file missing. Using CPU-only mode." "WARNING"
             }
@@ -629,7 +653,11 @@ if ($script:ContainerRuntime -eq "podman") {
             Write-Status "No NVIDIA GPU detected. Using CPU-only mode." "INFO"
         }
     } catch {
-        Write-Status "GPU detection failed. Using CPU-only mode." "WARNING"
+        if (-not $gpuEnabled) {
+            Write-Status "GPU detection failed. Using CPU-only mode." "WARNING"
+        } else {
+            Write-Status "GPU configured, minor issue detected during GPU check (continuing with GPU)." "WARNING"
+        }
     }
 }
 
@@ -689,6 +717,33 @@ if ($existingContainersAll -contains "postgres") {
 
 if ($runningContainers.Count -gt 0) {
     Write-Status "Found running containers: $($runningContainers -join ', ')" "SUCCESS"
+
+    if ($gpuEnabled) {
+        $gpuCritical = @("ollama", "open-webui")
+        $needGpuRecreate = $false
+        foreach ($c in $gpuCritical) {
+            if ($runningContainers -contains $c) {
+                if (-not (Test-ContainerHasGPU -Name $c)) { $needGpuRecreate = $true }
+            }
+        }
+        if ($needGpuRecreate) {
+            Write-Host "";
+            Write-Status "GPU detected but running containers are not GPU-enabled." "WARNING"
+            $ans = Read-Host "Recreate containers with GPU support now? (Y/n) [default: Yes]"
+            if ([string]::IsNullOrWhiteSpace($ans) -or $ans -eq 'Y' -or $ans -eq 'y') {
+                try {
+                    Invoke-Compose @composeArgs down 2>&1 | Out-Null
+                } catch {}
+                Write-Host "  >> Starting containers with GPU configuration..." -ForegroundColor Cyan
+                Invoke-Compose @composeArgs up --detach 2>&1 | Out-Null
+                if ($LASTEXITCODE -eq 0) {
+                    Write-Status "Containers recreated with GPU support" "SUCCESS"
+                } else {
+                    Write-Status "Failed to recreate containers with GPU (exit $LASTEXITCODE)" "ERROR"
+                }
+            }
+        }
+    }
     if ($stoppedContainers.Count -gt 0) {
         Write-Status "Also found stopped containers: $($stoppedContainers -join ', '). Starting them without recreate..." "WARNING"
         $startOrder = @("postgres","ollama","n8n","open-webui")
