@@ -546,6 +546,13 @@ if (-Not (Test-Path "docker-compose.yml")) {
     Write-Status "docker-compose.yml already exists (skipping)" "SUCCESS"
 }
 
+Write-Host ""
+if (-Not (Test-Path "scripts")) { New-Item -ItemType Directory -Path "scripts" -Force | Out-Null }
+if (-Not (Test-Path "scripts\init-db.sql")) {
+    New-Item -ItemType File -Path "scripts\init-db.sql" -Force | Out-Null
+    Write-Status "scripts\\init-db.sql not found. Created empty init file (safe for existing DB)." "WARNING"
+}
+
 if ($script:ContainerRuntime -eq "podman") {
     # Podman GPU detection and CDI setup
     try {
@@ -834,11 +841,17 @@ Write-Host ""
 Write-Host "---------------------------------------------------------" -ForegroundColor DarkGray
 Write-Host ""
 
+# Ensure scripts\init-db.sql exists after compose file setup
+if (!(Test-Path -Path "scripts\init-db.sql")) {
+    Write-Host "  >> Creating scripts\init-db.sql..." -ForegroundColor Cyan
+    New-Item -Path "scripts\init-db.sql" -ItemType File
+}
+
 # Download Ollama model (with idempotency check)
-Write-Host "  >> Would you like to download an Ollama model? (Y/n) [default: Yes]" -ForegroundColor Yellow
+Write-Host "  >> Would you like to download an Ollama model? (y/N) [default: No]" -ForegroundColor Yellow
 $downloadModel = Read-Host
 
-if ($downloadModel -eq "" -or $downloadModel -eq "Y" -or $downloadModel -eq "y") {
+if ($downloadModel -eq "Y" -or $downloadModel -eq "y" -or $downloadModel -eq "Yes" -or $downloadModel -eq "yes") {
     Write-Host ""
 
     # First, check existing models
